@@ -1,24 +1,24 @@
-from pathlib import Path
-code = r'''#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Pong V5 — Weight-Space Programming
 ==================================
 Gioco Pong Pygame con rete ReLU a pesi fissi (nessun training).
 
 Installazione:
-    python -m pip install pygame numpy
+    python -m pip install -r requirements.txt
 
 Avvio:
-    python pong_v5.py
-    python pong_v5.py --test
-    python pong_v5.py --headless --frames 10000
-    python pong_v5.py --headless --seeds 100 --frames 10000
+    python pong.py
+    python pong.py --test
+    python pong.py --headless --frames 10000
+    python pong.py --headless --seeds 100 --frames 10000
 
 Controlli:
     ESC      esci
     R        nuova partita
     SPACE    pausa
-    +/-      velocità palla (solo durante la partita)
+    G        mostra/nascondi grafico
+    +/-      velocità palla
 
 Nota tecnica:
 La rete implementa il comparatore su fold(y_pred) e paddle_y.
@@ -29,9 +29,7 @@ del primo layer; il readout diagnostico non influenza l'azione.
 from __future__ import annotations
 
 import argparse
-import math
 import random
-import sys
 from dataclasses import dataclass
 
 import numpy as np
@@ -48,11 +46,13 @@ WIDTH, HEIGHT = 1000, 650
 FPS = 60
 TOP = 7.0
 BOTTOM = HEIGHT - 7.0
-SPAN = BOTTOM - TOP
 
 PADDLE_W, PADDLE_H = 14, 104
 PADDLE_MARGIN = 34
 BALL_R = 9
+BALL_MIN_Y = TOP + BALL_R
+BALL_MAX_Y = BOTTOM - BALL_R
+SPAN = BALL_MAX_Y - BALL_MIN_Y
 PADDLE_SPEED = 7.0
 BALL_SPEED = 6.0
 MAX_BALL_SPEED = 12.0
@@ -75,9 +75,9 @@ def clamp(x: float, lo: float, hi: float) -> float:
 
 
 def reflect_y(y: float) -> float:
-    """Riflessione triangolare: ripiega una coordinata sul campo [TOP, BOTTOM]."""
-    phase = (y - TOP) % (2.0 * SPAN)
-    return TOP + (phase if phase <= SPAN else 2.0 * SPAN - phase)
+    """Ripiega il centro palla tra le pareti, considerando il suo raggio."""
+    phase = (y - BALL_MIN_Y) % (2.0 * SPAN)
+    return BALL_MIN_Y + (phase if phase <= SPAN else 2.0 * SPAN - phase)
 
 
 # -------------------------------- Rete neurale --------------------------------
@@ -107,21 +107,21 @@ class PongNetV5:
             [1,  0], [-1, 0],
         ], dtype=float)
         self.b1 = np.array([
-            -TOP, TOP,
-            -TOP - SPAN, TOP - SPAN,
-            -TOP - 2 * SPAN, TOP - 2 * SPAN,
+            -BALL_MIN_Y, BALL_MIN_Y,
+            -BALL_MIN_Y - SPAN, BALL_MIN_Y - SPAN,
+            -BALL_MIN_Y - 2 * SPAN, BALL_MIN_Y - 2 * SPAN,
             0, 0,
         ], dtype=float)
 
-        # Il fold è TOP + u0 + u1 -2u2 -2u3 +2u4 +2u5.
+        # Il fold è BALL_MIN_Y + u0 + u1 -2u2 -2u3 +2u4 +2u5.
         fold_coeff = np.array([1, 1, -2, -2, 2, 2, 0, 0], dtype=float)
         paddle_coeff = np.array([0, 0, 0, 0, 0, 0, -1, 1], dtype=float)
         signed_error = fold_coeff + paddle_coeff
 
         self.W2 = np.vstack((signed_error, -signed_error))
         self.b2 = np.array([
-            TOP - self.delta,
-            -TOP - self.delta,
+            BALL_MIN_Y - self.delta,
+            -BALL_MIN_Y - self.delta,
         ], dtype=float)
         self.W3 = np.array([[1.0, -1.0]])
         self.b3 = np.array([0.0])
@@ -137,7 +137,7 @@ class PongNetV5:
         output = float((self.W3 @ v + self.b3)[0])
 
         # Solo diagnostica: il controllo viene calcolato da W2 e W3.
-        fold = float(TOP + u[0] + u[1] - 2*u[2] - 2*u[3]
+        fold = float(BALL_MIN_Y + u[0] + u[1] - 2*u[2] - 2*u[3]
                      + 2*u[4] + 2*u[5])
         return output, {
             "layer1": u, "layer2": v,
@@ -303,7 +303,7 @@ class PongApp:
             raw = -SPAN + i * (3 * SPAN / 100)
             folded = reflect_y(raw)
             px = gx + i * gw / 100
-            py = gy + gh - (folded - TOP) / SPAN * gh
+            py = gy + gh - (folded - BALL_MIN_Y) / SPAN * gh
             pts.append((int(px), int(py)))
         pygame.draw.lines(self.screen, CYAN, False, pts, 2)
         marker_x = int(gx + ((self.pred_plot - (-SPAN)) / (3 * SPAN)) * gw)
@@ -445,12 +445,19 @@ def stress_test(seeds=100, frames=10000):
     return total_hits, total_misses
 
 
+def positive_int(value: str) -> int:
+    number = int(value)
+    if number <= 0:
+        raise argparse.ArgumentTypeError("deve essere un intero maggiore di zero")
+    return number
+
+
 def main():
     parser = argparse.ArgumentParser(description="Pong V5")
     parser.add_argument("--test", action="store_true")
     parser.add_argument("--headless", action="store_true")
-    parser.add_argument("--frames", type=int, default=10000)
-    parser.add_argument("--seeds", type=int, default=1)
+    parser.add_argument("--frames", type=positive_int, default=10000)
+    parser.add_argument("--seeds", type=positive_int, default=1)
     args = parser.parse_args()
 
     if args.test:
@@ -464,9 +471,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-'''
-path = Path("/mnt/data/pong_v5.py")
-path.write_text(code, encoding="utf-8")
-import py_compile
-py_compile.compile(str(path), doraise=True)
-print(f"Creato e compilato: {path} ({path.stat().st_size} byte)")
