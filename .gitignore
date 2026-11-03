@@ -13,3 +13,4 @@ output/
 .playwright-mcp/
 output/*
 .playwright-mcp/*
+/docs/REDDIT_DRAFT.md

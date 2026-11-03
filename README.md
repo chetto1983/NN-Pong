@@ -14,6 +14,34 @@ di Rikiya Takehi, Jayden Teoh, Alex Zhang e Omar Khattab. Questo progetto è una
 dimostrazione indipendente ispirata al principio di esprimere un algoritmo nei
 pesi di una rete; non riproduce i benchmark dell'articolo.
 
+## Quanti parametri hanno le reti
+
+Il conteggio comprende pesi e bias. La rete completa di Snake usa matrici
+sparse: i coefficienti memorizzati vanno distinti dalle dimensioni delle
+matrici dense equivalenti.
+
+| Rete | Architettura | Pesi memorizzati | Bias | Totale memorizzato | Equivalente denso |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Pong | 2 → 8 → 2 → 1 | 34 | 11 | **45** | 45 |
+| Snake originale, ciclo | 2 → 18 → 4 → 4 | 124 | 26 | **150** | 150 |
+| Snake completa, scorciatoie | 1008 → 955 → 28 → 11 → 20 → 4 | 6.148 | 1.018 | **7.166** | 991.006 |
+
+I **7.166** coefficienti della rete completa includono tutti i bias e gli zeri
+esplicitamente memorizzati. **991.006** è il conteggio che si avrebbe allocando
+tutte le connessioni, comprese quelle implicitamente nulle; non è il numero
+di coefficienti salvati nel modello sparse. Gli indici delle connessioni e
+gli altri metadati occupano memoria aggiuntiva, ma non sono inclusi nel
+conteggio di pesi e bias.
+
+Tutti i pesi delle reti di gioco sono fissi e costruiti analiticamente, senza
+training o RL. La variante equivalente di Snake da **129 parametri** è stata
+provata soltanto in memoria: non è una delle reti distribuite né la baseline
+usata nei benchmark.
+
+I pesi Snake sono leggibili in [snake_classic.json](weights/snake_classic.json)
+e [snake_shortcuts.json](weights/snake_shortcuts.json). La costruzione dei pesi
+Pong è in [pong_game/network.py](pong_game/network.py).
+
 ## Requisiti e avvio
 
 Python **3.12 o superiore**. Versioni delle dipendenze bloccate in
