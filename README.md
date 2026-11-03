@@ -4,9 +4,9 @@ Due giochi automatici controllati da reti con **pesi costruiti analiticamente**,
 senza addestramento: Pong e Snake Classic. Snake riprende la grafica del gioco
 su [snake-game.io](https://snake-game.io/) e usa una rete di 150 parametri.
 
-Pong automatico in Python e Pygame: la racchetta verde è controllata da una
+Pong automatico in Python e Pygame: la racchetta turchese è controllata da una
 piccola rete ReLU con pesi costruiti analiticamente, senza addestramento.
-La racchetta gialla usa una strategia deterministica di confronto.
+La racchetta corallo usa una strategia deterministica di confronto.
 
 L'idea nasce da [Sparks of Weight-Space Programming](https://rikiyat.github.io/blog/weight-space-programming/)
 di Rikiya Takehi, Jayden Teoh, Alex Zhang e Omar Khattab. Questo progetto è una
@@ -38,17 +38,19 @@ python3 -m venv .venv
 .venv/bin/python pong.py
 ```
 
-Entrambe le racchette sono automatiche. La finestra mostra punteggio, uscita
-della rete, previsione, respinte e palle mancate.
+Entrambe le racchette sono automatiche. Il campo e il punteggio sono sempre
+visibili; uscita della rete, previsione e statistiche si consultano nel pannello
+di diagnostica, separato dall'area di gioco. La finestra è ridimensionabile.
 
 | Tasto | Azione |
 | --- | --- |
 | `Esc` | Esci |
 | `Spazio` | Pausa / riprendi |
 | `R` | Ricomincia la partita |
-| `G` | Mostra / nascondi il grafico del fold |
+| `G` | Mostra / nascondi la diagnostica fuori dal campo |
 | `+` oppure `=` | Aumenta la velocità della palla |
 | `-` | Riduci la velocità della palla |
+| `F` | Schermo intero / finestra |
 
 ## Verifiche
 
@@ -66,7 +68,8 @@ python pong.py --headless --seeds 100 --frames 10000
 ```
 
 `--frames` e `--seeds` richiedono interi positivi. I seed della simulazione
-headless vanno da zero a `--seeds - 1`; `--frames` indica i frame per seed.
+headless vanno da zero a `--seeds - 1`; `--frames` indica passi di 1/60 di
+secondo per seed, indipendentemente dalla velocità del computer.
 Il risultato riporta respinte, palle mancate e punteggio aggregato: zero palle
 mancate misura la capacità di difendere nelle condizioni provate, non quella di
 battere ogni avversario. Il comando termina anche se vengono registrati errori
@@ -81,7 +84,9 @@ la repository viene ospitata su GitHub. Il rendering nei test usa il driver SDL
 La rete `PongNetV5` ha struttura **2 → 8 → 2 → 1**, con 45 parametri tra pesi e
 bias. Riceve la quota della racchetta e una previsione verticale grezza:
 
-1. Python calcola il tempo all'impatto e `y_pred = ball_y + ball_vy * t`.
+1. Python calcola il tempo all'impatto e `y_pred = ball_y + ball_vy * t`, poi
+   riduce la coordinata modulo il periodo di riflessione per tenerla nel
+   dominio della rete senza cambiare il punto di arrivo.
 2. Le attivazioni ReLU del primo strato rappresentano i segmenti necessari a
    ripiegare la traiettoria dopo i rimbalzi, tramite una funzione triangolare
    chiamata *fold*.
@@ -94,20 +99,40 @@ Il fold restituito per il grafico è diagnostico: il movimento viene calcolato
 attraverso le matrici `W1`, `W2`, `W3`. Il centro della palla rimbalza tra
 `y=16` e `y=634`; la rete usa gli stessi limiti e considera il raggio di 9 pixel.
 
-La cinematica precedente alla rete resta scritta in Python. Inoltre la rete
-implementa il fold soltanto su un intervallo finito: la previsione grezza viene
-limitata a `[-2 * SPAN + 1, 2.9 * SPAN]`, con `SPAN=618`. Per traiettorie fuori
-da questo intervallo, il limite può rendere imprecisa la previsione. La demo
-conserva la grafica originale: il pannello del grafico copre parte del campo
-e può essere nascosto con `G`.
+La cinematica precedente alla rete resta scritta in Python. Il vecchio limite
+che tagliava le previsioni molto lontane è stato rimosso; la periodicità consente
+di gestire anche traiettorie con molti rimbalzi.
+
+## Fisica di Pong
+
+La palla si muove a velocità costante fra gli urti. Le collisioni sono calcolate
+al tempo di contatto fra il cerchio della palla e le racchette a capsula, anche
+quando lo spostamento supera lo spessore della racchetta. Sulle pareti cambia
+la componente normale della velocità; sulle racchette intervengono anche il
+movimento della racchetta e l'attrito tangenziale con spin. Non c'è più un
+aumento automatico della velocità a ogni respinta.
+
+L'app usa passi fisici di 1/120 di secondo e interpolazione per il rendering.
+Pareti e racchette disegnate corrispondono alla geometria simulata. È un modello
+di urti 2D senza gravità, non una simulazione tridimensionale del ping-pong.
+Dettagli e limiti in [docs/PONG_PHYSICS.md](docs/PONG_PHYSICS.md).
+
+![Nuova schermata Pong](docs/images/pong.png)
+
+Verifica locale dopo la revisione: **92 test superati** complessivi;
+stress Pong di 100 seed × 10.000 passi, 3.019 respinte, zero palle mancate
+dalla rete e punteggio aggregato 38–0. Questi risultati riguardano l'avversario
+e le condizioni inclusi nella demo.
 
 ## File
 
 ```text
-pong.py                     Gioco, rete, simulazione e CLI
+pong.py                     CLI e compatibilità degli import
+pong_game/                  Configurazione, rete, fisica e renderer
 requirements.txt            Dipendenze con versioni bloccate
 tests/test_pong.py           Test della rete, fisica e CLI
-tests/test_app.py            Prova del rendering e dell'uscita
+tests/test_pong_physics.py   Regressioni degli urti e della temporizzazione
+tests/test_app.py            Rendering, comandi e ridimensionamento
 .github/workflows/tests.yml  Verifiche automatiche Windows/Linux
 docs/superpowers/            Decisioni e piano della migrazione
 ```
@@ -172,7 +197,7 @@ leggibili da altri programmi. `--seed` imposta il primo seed della serie.
 La costruzione matematica dei pesi è descritta in [docs/SNAKE.md](docs/SNAKE.md).
 I test Snake sono inclusi nel comando `python -m unittest discover -s tests -v`.
 
-Verifica locale: **54 test superati** complessivi; benchmark Snake sui seed
+Verifica locale: **92 test superati** complessivi; benchmark Snake sui seed
 0–99 con **100 vittorie su 100**, zero collisioni e 248 mele per partita.
 Media: 15.465,24 mosse per completare il campo.
 

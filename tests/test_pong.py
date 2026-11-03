@@ -40,15 +40,15 @@ class SimulationTests(unittest.TestCase):
     def test_predicted_intercept_matches_physical_bounce(self):
         sim = pong.PongSimulation()
         sim.ball_x, sim.ball_y = 500.0, 600.0
-        sim.ball_vx, sim.ball_vy = -6.0, 3.5
+        sim.ball_vx, sim.ball_vy = -360.0, 210.0
         raw = sim.predict_player_intercept()
         _, info = sim.net.forward(sim.player_y, raw)
-        # Impatto a x=57 dopo 443/6 frame; rimbalzo del centro a y=634.
+        # Impatto a x=57 dopo 443/360 secondi; centro rimbalza a y=634.
         self.assertAlmostEqual(info['fold'], 409.5833333333333)
 
     def test_wall_bounces_keep_ball_inside_field(self):
         for y, velocity, expected_y, expected_velocity in (
-            (17, -3, 18, 3), (633, 3, 632, -3)
+            (17, -180, 18, 180), (633, 180, 632, -180)
         ):
             with self.subTest(y=y):
                 sim = pong.PongSimulation()
@@ -68,7 +68,7 @@ class SimulationTests(unittest.TestCase):
         self.assertGreater(first.stats.hits, 0)
 
     def test_moving_away_or_stationary_ball_targets_center(self):
-        for vx in (0, 6):
+        for vx in (0, 360):
             with self.subTest(vx=vx):
                 sim = pong.PongSimulation()
                 sim.ball_y, sim.ball_vx = 100, vx
@@ -76,7 +76,7 @@ class SimulationTests(unittest.TestCase):
 
     def test_missed_ball_updates_score_and_serves(self):
         for x, vx, expected_player, expected_opponent in (
-            (-10, -6, 0, 1), (1010, 6, 1, 0)
+            (-10, -360, 0, 1), (1010, 360, 1, 0)
         ):
             with self.subTest(x=x):
                 sim = pong.PongSimulation()
