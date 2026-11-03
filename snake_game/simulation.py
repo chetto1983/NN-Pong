@@ -5,7 +5,7 @@ import random
 
 import numpy as np
 
-from .network import RIGHT, SnakeNet, _dimensions
+from .network import RIGHT, _dimensions, create_network
 
 
 DIRECTIONS = ((0, -1), (1, 0), (0, 1), (-1, 0))
@@ -14,15 +14,15 @@ DIRECTIONS = ((0, -1), (1, 0), (0, 1), (-1, 0))
 class SnakeSimulation:
     """A head-first snake whose default actions are the argmax of network logits.
 
-    Following the analytic cycle keeps the body in cycle order, so each free
-    food cell is eventually reached. This guarantees completion on an empty
-    rectangular board; external action overrides and edited weights can lose.
+    The state-aware analytic policy preserves cyclic body order while taking
+    shortcuts toward food. The original cycle-only network remains selectable.
+    External action overrides and edited weights can lose.
     """
 
     def __init__(self, seed=0, cols=18, rows=14, net=None):
         self.cols, self.rows = _dimensions(cols, rows)
         if net is None:
-            net = SnakeNet(self.cols, self.rows)
+            net = create_network(cols=self.cols, rows=self.rows)
         if (net.cols, net.rows) != (self.cols, self.rows):
             raise ValueError('Network and simulation board dimensions must match.')
         self.net = net
@@ -36,7 +36,9 @@ class SnakeSimulation:
         self.steps = 0
         self.status = 'running'
         self.direction = RIGHT
-        self.last_logits = self.net.forward(*self.body[0])
+        self.shortcuts = 0
+        self.last_shortcut = False
+        self.last_logits = self.net.forward_state(self.body, self.food)
 
     def _spawn_food(self):
         occupied = set(self.body)
@@ -57,11 +59,12 @@ class SnakeSimulation:
                                    or not isinstance(action, Integral)
                                    or not 0 <= action < 4):
             raise ValueError('Action must be an integer: UP=0, RIGHT=1, DOWN=2, LEFT=3.')
-        self.last_logits = self.net.forward(*self.body[0])
+        self.last_logits = self.net.forward_state(self.body, self.food)
         if action is None:
             action = int(np.argmax(self.last_logits))
         self.direction = int(action)
         self.steps += 1
+        self.last_shortcut = False
         dx, dy = DIRECTIONS[self.direction]
         head_x, head_y = self.body[0]
         new_head = (head_x + dx, head_y + dy)
@@ -71,6 +74,13 @@ class SnakeSimulation:
                 or new_head in blocking_body):
             self.status = 'dead'
             return self.status
+        # Diagnostics only: this classification never changes the selected move.
+        ranks = getattr(self.net, 'cycle_ranks', None)
+        if ranks is not None:
+            old_rank = ranks[head_y * self.cols + head_x]
+            new_rank = ranks[new_head[1] * self.cols + new_head[0]]
+            self.last_shortcut = (new_rank - old_rank) % (self.cols * self.rows) > 1
+            self.shortcuts += int(self.last_shortcut)
         self.body.insert(0, new_head)
         if growing:
             self.score += 1

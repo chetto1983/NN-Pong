@@ -2,7 +2,8 @@
 
 Due giochi automatici controllati da reti con **pesi costruiti analiticamente**,
 senza addestramento: Pong e Snake Classic. Snake riprende la grafica del gioco
-su [snake-game.io](https://snake-game.io/) e usa una rete di 150 parametri.
+su [snake-game.io](https://snake-game.io/) e usa una rete che osserva mela e corpo
+per scegliere scorciatoie; la baseline originale da 150 parametri resta disponibile.
 
 Pong automatico in Python e Pygame: la racchetta turchese è controllata da una
 piccola rete ReLU con pesi costruiti analiticamente, senza addestramento.
@@ -119,7 +120,7 @@ Dettagli e limiti in [docs/PONG_PHYSICS.md](docs/PONG_PHYSICS.md).
 
 ![Nuova schermata Pong](docs/images/pong.png)
 
-Verifica locale dopo la revisione: **92 test superati** complessivi;
+Verifica locale della revisione Pong: **92 test superati** al momento della revisione;
 stress Pong di 100 seed × 10.000 passi, 3.019 respinte, zero palle mancate
 dalla rete e punteggio aggregato 38–0. Questi risultati riguardano l'avversario
 e le condizioni inclusi nella demo.
@@ -153,8 +154,14 @@ recuperabile nel primo commit della repository.
 # Cento partite riproducibili, senza finestra
 .\.venv\Scripts\python.exe snake.py --headless --seeds 100
 
-# Usa i pesi inclusi nella repository
-.\.venv\Scripts\python.exe snake.py --weights weights/snake_classic.json
+# Confronta rete completa e baseline sugli stessi seed
+.\.venv\Scripts\python.exe snake.py --compare --seeds 100
+
+# Usa i pesi della rete completa inclusi nella repository
+.\.venv\Scripts\python.exe snake.py --weights weights/snake_shortcuts.json
+
+# Rete originale, senza scorciatoie
+.\.venv\Scripts\python.exe snake.py --policy cycle
 
 # Esporta una nuova copia dei pesi analitici
 .\.venv\Scripts\python.exe snake.py --export-weights pesi.json
@@ -170,7 +177,7 @@ funziona offline; fonti in [snake_assets/SOURCES.md](snake_assets/SOURCES.md).
 | `Spazio` | Pausa / riprendi |
 | `R` | Nuova partita con lo stesso seed |
 | `+` / `-` | Velocità, da 1 a 120 mosse al secondo |
-| `G` | Mostra / nascondi il percorso del controllore |
+| `G` | Mostra / nascondi il ciclo di riferimento |
 | `H` o icona `?` | Aiuto |
 | Ingranaggio | Velocità e visualizzazione del percorso |
 | `F` o icona schermo intero | Cambia visualizzazione |
@@ -181,12 +188,17 @@ Il serpente parte automaticamente. Le frecce possono riprendere una pausa,
 ma la direzione rimane decisa dalla rete. Il record locale è salvato in
 `~/.nn-pong/snake-record.json`; le simulazioni headless non lo modificano.
 
-La rete **2 → 18 → 4 → 4** riceve soltanto la posizione della testa e produce
-quattro logits. I pesi codificano un ciclo che visita tutte le celle: non c'è
-training, pianificazione esterna delle mosse o inseguimento della mela in Python.
-È una strategia conservativa: raccoglie le mele percorrendo il ciclo, quindi può
-fare giri lunghi. La garanzia riguarda la politica costruita, il campo vuoto e
-il corpo inizializzato sul ciclo; modificare pesi, corpo o ostacoli può invalidarla.
+La nuova rete **1008 → 955 → 28 → 11 → 20 → 4** riceve quattro mappe binarie:
+testa, mela, coda e corpo. Nei pesi sono codificati ostacoli, distanze sul ciclo
+e scelta delle scorciatoie. Da metà campo occupato ritorna al ciclo per
+ricompattare il corpo. In partita esegue soltanto strati affini, ReLU e argmax,
+senza training, ricerca di percorsi o sostituzione esterna dell'azione.
+
+Contiene **7.166 coefficienti memorizzati** in matrici sparse (991.006 nella
+rappresentazione densa equivalente). È più grande e costa più CPU della baseline:
+il guadagno riguarda le mosse necessarie a completare il gioco. La proprietà di
+sicurezza riguarda i pesi costruiti, il campo vuoto e il corpo inizializzato
+sul ciclo; modificare pesi, corpo o ostacoli può invalidarla.
 
 La demo dichiara vittoria quando occupa tutte le 252 celle (248 mele dopo i
 quattro segmenti iniziali). Questo stato terminale esplicito consente di misurare
@@ -197,8 +209,12 @@ leggibili da altri programmi. `--seed` imposta il primo seed della serie.
 La costruzione matematica dei pesi è descritta in [docs/SNAKE.md](docs/SNAKE.md).
 I test Snake sono inclusi nel comando `python -m unittest discover -s tests -v`.
 
-Verifica locale: **92 test superati** complessivi; benchmark Snake sui seed
-0–99 con **100 vittorie su 100**, zero collisioni e 248 mele per partita.
-Media: 15.465,24 mosse per completare il campo.
+Confronto sui seed **0–99**: **100 completamenti su 100** per entrambe le reti,
+zero collisioni e 248 mele per partita. Media: **15.465,24 → 8.369,72 mosse**,
+una riduzione del **45,88%**. Report JSON in [docs/benchmarks](docs/benchmarks/).
+
+Sui seed separati **100–199**, il risultato è **15.427,51 → 8.380,99 mosse**
+(**−45,68%**), con altri 100 completamenti su 100 e zero collisioni.
+La suite completa passa **115 test**. [Protocollo e limiti del confronto](docs/benchmarks/README.md).
 
 ![Snake Classic in Pygame](docs/images/snake.png)

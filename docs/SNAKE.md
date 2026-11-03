@@ -1,100 +1,149 @@
-# Snake: un programma scritto nei pesi
+# Snake: rete completa con scorciatoie
 
-L'idea è coerente con il [weight-space programming](https://rikiyat.github.io/blog/weight-space-programming/):
-costruire le matrici che realizzano un comportamento, senza ottimizzatore o training.
-Questo controllore è un esperimento indipendente, non una replica dei benchmark
-dell'articolo.
+La rete predefinita osserva testa, mela, coda e corpo e sceglie le mosse con
+strati affini e ReLU. Tutti i pesi sono costruiti analiticamente: nessun training,
+reinforcement learning, ricerca di percorsi durante la partita o correzione
+esterna dell'azione. La [baseline da 150 parametri](SNAKE_BASELINE.md) resta
+disponibile con `python snake.py --policy cycle`.
 
-## Strategia
+## Osservazione
 
-Su un campo rettangolare con un numero pari di righe, la rete segue un ciclo
-hamiltoniano: ogni cella viene visitata una volta prima di tornare all'inizio.
-Le righe pari vengono percorse verso sinistra, quelle dispari verso destra.
-L'ultima colonna è riservata al ritorno verso l'alto.
+La griglia 18×14 ha N=252 celle. L'ingresso contiene quattro mappe binarie
+piatte in ordine di riga, per **1008 valori**: testa, mela, coda e corpo completo.
+Le prime tre hanno una sola cella attiva; l'ultima include testa e coda.
 
-Il corpo parte con quattro segmenti consecutivi sul ciclo. Ogni mossa procede
-alla cella successiva; la crescita occupa un'altra cella del ciclo senza tagliare
-il corpo. Finché c'è una cella libera, ogni mela generata su una cella libera
-verrà raggiunta. Il programma termina con vittoria quando il campo è pieno.
+`encode_state(body, food)` controlla la validità e riempie le mappe, senza
+calcolare azioni ammesse. `forward_observation(vector)` permette di esaminare
+l'inferenza direttamente. Tutte le scelte restano nei coefficienti dei layer.
 
-La strategia privilegia una proprietà verificabile rispetto al numero minimo
-di mosse per mela. Non usa la posizione della mela come input e non cerca scorciatoie.
+## Strategia e condizioni
 
-## Rete 2 → 18 → 4 → 4
+Il ciclo della baseline fornisce un ordine alle celle. Le scorciatoie conservano
+l'ordine ciclico coda→corpo→testa e non superano la mela. Il concetto di preservare
+l'ordine durante le scorciatoie è descritto nell'[articolo originale di John
+Tapsell](https://johnflux.com/2015/05/02/nokia-6110-part-3-algorithms/);
+qui viene realizzato con una costruzione neurale specifica del progetto.
 
-Input: coordinate intere `(x, y)` della testa su un campo `W=18`, `H=14`.
-Tutte le coordinate vengono validate prima dell'inferenza. `ReLU(t)=max(0,t)`.
+La rete penalizza i vicini fuori dal campo, nel corpo esclusa la coda mobile,
+oltre la mela o oltre la coda. Fra gli altri sceglie il maggior avanzamento.
+Quando il corpo occupa **almeno metà campo**, i pesi consentono soltanto il
+successore immediato del ciclo: questo ricompatta il corpo ed evita buchi interni
+costosi da raggiungere.
 
-Il primo strato produce 18 attivazioni:
+La proprietà di sicurezza dipende da:
 
-- `a[k] = ReLU(y-k)`, per `k=0…H-2` (13 attivazioni).
-- `R = ReLU(x-(W-2))`, indicatore dell'ultima colonna.
-- `L = ReLU(1-x)`, indicatore della prima colonna.
-- `Q = ReLU(x-(W-3))`, usato per riconoscere la penultima colonna.
-- `T = ReLU(1-y)`, indicatore della prima riga.
-- `B = ReLU(y-(H-2))`, indicatore dell'ultima riga.
+- Corpo iniziale ordinato sul ciclo; avanzare prima della coda e rimuovere la
+  vecchia coda conserva quest'ordine.
+- Possibilità di entrare nella vecchia coda perché si libera nello stesso passo.
+  La mela non può occuparla, quindi questo caso non comporta crescita.
+- Disponibilità del successore del ciclo. Ogni mossa riduce la distanza dalla
+  mela finché viene raggiunta, quindi non si crea un ciclo che la ignora.
 
-Nella combinazione lineare del secondo strato:
+Le condizioni sono campo vuoto, una mela alla volta, crescita immediata di un
+segmento e stato iniziale coerente. Pesi modificati o corpi arbitrari non
+conservano automaticamente queste proprietà. Non si rivendica il percorso
+globalmente ottimo.
 
-```text
-O = a[0] + Σ(k=1…H-2) 2·(-1)^k·a[k]
-P = Q - 2R
-```
+## Regole dentro le matrici
 
-Sulle coordinate intere valide, `O` è 1 sulle righe dispari e 0 sulle pari;
-`P` vale 1 soltanto sulla penultima colonna. Sono combinazioni dei neuroni del
-primo strato, incluse nella matrice `W2`, non calcoli Python che scelgono la mossa.
+Architettura: **1008 → 955 → 28 → 11 → 20 → 4**. I primi quattro strati usano
+ReLU; l'ultimo produce logits UP, RIGHT, DOWN, LEFT.
 
-Il secondo strato contiene quattro gate:
-
-```text
-u = ReLU(R - T)
-d1 = ReLU(L - O)
-d2 = ReLU(P + O - B - 1)
-o = ReLU(O)
-```
-
-L'ultimo strato produce i logits nell'ordine **su, destra, giù, sinistra**:
+Il primo strato contiene un gate per ciascun arco adiacente p→q:
 
 ```text
-[3u, o, 3(d1+d2), 1-o]
+occupato(p→q) = ReLU(testa[p] + corpo[q] - coda[q] - 1)
 ```
 
-Il valore 3 dà priorità alle svolte sui bordi rispetto al movimento lungo le
-righe. L'azione è l'argmax dei quattro logits. L'inferenza usa soltanto prodotti
-matrice-vettore, bias e ReLU; non contiene una funzione alternativa di guida.
+Altri neuroni ricavano sei differenze di rango traslate di N (quattro vicini,
+mela, coda), indicatori dei bordi e lunghezza L sommando la mappa del corpo.
+La geometria e i ranghi sono coefficienti costruiti una volta, non un percorso
+calcolato in Python a ogni mossa.
 
-| Tensore | Dimensioni | Parametri |
-| --- | --- | --- |
-| W1, b1 | 18×2, 18 | 54 |
-| W2, b2 | 4×18, 4 | 76 |
-| W3, b3 | 4×4, 4 | 20 |
-| Totale | | **150** |
+Secondo e terzo strato costruiscono la distanza positiva modulo N da una
+differenza traslata z:
 
-## Cosa resta fuori dalla rete
+```text
+n0 = ReLU(N + 1 - z)
+n1 = ReLU(N - z)
+d = ReLU(z - N + N*n0 - N*n1)
 
-Python gestisce lo stato del gioco: movimento del corpo, comparsa casuale delle
-mele, collisioni, punteggio, rendering e argmax. Non modifica i pesi in base ai
-risultati e non sostituisce le azioni della rete con mosse ritenute migliori.
+T = N/2
+allow = ReLU(ReLU(T-L) - ReLU(T-L-1))
+```
 
-Il percorso mostrato con `G` è diagnostico, ricavato dalle uscite della rete;
-non costituisce una tabella usata dal gioco per scegliere le mosse.
+Sulle osservazioni discrete la formula è esatta. Ranghi uguali danno distanza N,
+utile per un corpo di lunghezza 1. La seconda formula consente scorciatoie
+soltanto prima di metà campo.
 
-## File e riproducibilità
+Nel quarto strato, con f distanza dalla mela, t dalla coda e u indicatore
+di occupazione/bordo:
 
-- `snake_game/network.py`: costruzione analitica e inferenza.
-- `snake_game/simulation.py`: regole e stato, indipendenti da Pygame.
-- `snake_game/app.py`: finestra, animazione, controlli e record.
-- `snake.py`: CLI, verifica del ciclo, benchmark ed esportazione.
-- `weights/snake_classic.json`: i 150 valori, leggibili e modificabili.
+```text
+vf = ReLU(d - f)
+vt = ReLU(d - t)
+vd = ReLU(d - 1 - N*allow)
+logit = d - (N+1)*(vf + vt + vd + u)
+```
 
-Il JSON include versione del formato, dimensioni della griglia e sei tensori.
-Il caricamento verifica forme e valori finiti. La compatibilità del formato
-non implica la sicurezza di una politica modificata: usare `--test` e
-`--headless` per valutare nuovi pesi.
+Una violazione intera porta il logit sotto ogni mossa ammessa. La simulazione
+esegue direttamente l'argmax. Un test modifica il readout per scegliere il collo
+occupato e verifica che il gioco registri la collisione: nessun filtro ripara
+la scelta.
 
-La rete supporta campi con almeno 6 colonne e almeno 4 righe, in numero pari.
-Il numero di neuroni del primo strato è `H+4`. La finestra riproduce il campo
-18×14 del riferimento; altri campi possono essere valutati tramite API o pesi
-caricati in modalità headless. La geometria dello stato iniziale e l'assenza
-di ostacoli sono parte delle condizioni della strategia.
+## Conteggio e rappresentazione
+
+| Strato | Dimensioni | Pesi memorizzati | Bias |
+| --- | --- | ---: | ---: |
+| 1 | 1008→955 | 5100 | 955 |
+| 2 | 955→28 | 968 | 28 |
+| 3 | 28→11 | 28 | 11 |
+| 4 | 11→20 | 32 | 20 |
+| 5 | 20→4 | 20 | 4 |
+
+Totale: **7.166 coefficienti memorizzati**, inclusi tutti i bias e gli zeri
+espliciti. Le matrici dense equivalenti avrebbero **991.006 parametri**.
+Ogni connessione memorizza indice sorgente, indice destinazione e coefficiente;
+gli zeri impliciti non occupano matrici dense. L'inferenza rimane una somma
+pesata, bias e ReLU, non una tabella di azioni.
+
+La rete è più grande e costa più CPU della baseline. L'obiettivo è ridurre le
+mosse del gioco; i report includono anche il tempo di esecuzione, comprensivo
+di codifica e simulazione. I tempi dipendono dal carico della macchina.
+
+## Uso e pesi
+
+```powershell
+.\.venv\Scripts\python.exe snake.py
+.\.venv\Scripts\python.exe snake.py --test
+.\.venv\Scripts\python.exe snake.py --compare --seeds 100 --json
+.\.venv\Scripts\python.exe snake.py --compare --seed 100 --seeds 100 --json
+.\.venv\Scripts\python.exe snake.py --weights weights/snake_shortcuts.json
+.\.venv\Scripts\python.exe snake.py --policy cycle
+```
+
+- `shortcut_network.py`: costruzione, codifica e inferenza della rete completa.
+- `weights/snake_shortcuts.json`: cinque matrici sparse, formato versione 2.
+- `weights/snake_classic.json`: baseline originale, formato versione 1.
+- `create_network()` e `load_network()`: selezione e caricamento delle politiche.
+
+Il loader controlla dimensioni, indici e valori finiti e usa esattamente i
+coefficienti caricati: non li rigenera. G mostra il ciclo di riferimento,
+non il futuro percorso della politica.
+
+## Valutazione
+
+Il confronto usa gli stessi seed e regole. Le mele successive possono cadere
+in celle diverse perché vengono estratte fra quelle libere. I seed 0–9 sono
+stati usati durante la progettazione della regola; i seed 100–199 sono un gruppo
+separato di verifica. Nessun aggiustamento dei pesi è basato su quel gruppo.
+I risultati riproducibili sono in `docs/benchmarks/`.
+
+Sui seed 0–99: baseline **15.465,24** mosse medie; rete completa **8.369,72**,
+riduzione **45,88%**, entrambe con 100 completamenti e zero collisioni/timeout.
+Questo dimostra il miglioramento in quelle condizioni, senza rivendicare una
+nuova scoperta scientifica o superiorità su tutti i metodi per Snake.
+
+Sui seed separati **100–199**: **15.427,51 → 8.380,99** mosse medie,
+riduzione **45,68%**, ancora 100 completamenti su 100 per entrambe le reti.
+Protocollo e limiti sono nel [riepilogo dei benchmark](benchmarks/README.md).

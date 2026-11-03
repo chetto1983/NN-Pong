@@ -27,6 +27,20 @@ def _dimensions(cols, rows):
 class SnakeNet:
     """Analytic 2 -> (rows + 4) -> 4 -> 4 network; 150 parameters at 18 x 14."""
 
+    policy_name = 'cycle'
+
+    @property
+    def parameter_count(self):
+        return sum(getattr(self, name).size for name in ('W1', 'b1', 'W2', 'b2', 'W3', 'b3'))
+
+    @property
+    def dense_parameter_count(self):
+        return self.parameter_count
+
+    def forward_state(self, body, food):
+        """Common state protocol; this baseline deliberately uses only the head."""
+        return self.forward(*body[0])
+
     def __init__(self, cols=18, rows=14):
         self.cols, self.rows = _dimensions(cols, rows)
         width = self.rows + 4
@@ -119,3 +133,29 @@ class SnakeNet:
         for name, array in arrays.items():
             setattr(net, name, array)
         return net
+
+
+def create_network(policy='shortcuts', cols=18, rows=14):
+    """Construct analytic weights for the selected policy, without fitting."""
+    if policy == 'cycle':
+        return SnakeNet(cols, rows)
+    if policy == 'shortcuts':
+        from .shortcut_network import ShortcutSnakeNet
+        return ShortcutSnakeNet(cols, rows)
+    raise ValueError(f'Unknown Snake policy: {policy!r}')
+
+
+def load_network(path):
+    """Dispatch portable v1 dense and v2 sparse weight files."""
+    try:
+        payload = json.loads(Path(path).read_text(encoding='utf-8'))
+    except (json.JSONDecodeError, UnicodeError) as error:
+        raise ValueError('Invalid Snake weight JSON.') from error
+    if not isinstance(payload, dict) or type(payload.get('version')) is not int:
+        raise ValueError('Unsupported Snake weight format.')
+    if payload['version'] == 1:
+        return SnakeNet.load(path)
+    if payload['version'] == 2:
+        from .shortcut_network import ShortcutSnakeNet
+        return ShortcutSnakeNet.load(path)
+    raise ValueError('Unsupported Snake weight format version.')

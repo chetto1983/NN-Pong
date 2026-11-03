@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pygame
 
-from .network import SnakeNet
+from .network import SnakeNet, create_network
 from .simulation import SnakeSimulation
 
 
@@ -30,7 +30,7 @@ class SnakeApp:
 
     def __init__(self, seed=0, net=None, speed=10, record_path=None):
         self.seed = seed
-        self.net = net if net is not None else SnakeNet()
+        self.net = net if net is not None else create_network()
         if (self.net.cols, self.net.rows) != (18, 14):
             raise ValueError('La finestra Snake richiede una rete 18 x 14; usa --headless per altre dimensioni.')
         self.speed = max(1, min(120, int(speed)))
@@ -38,7 +38,8 @@ class SnakeApp:
         self.best_score = self._read_record()
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-        pygame.display.set_caption('Snake · rete neurale · 150 parametri analitici')
+        label = 'scorciatoie' if self.net.policy_name == 'shortcuts' else 'ciclo'
+        pygame.display.set_caption(f'Snake · {label} · pesi analitici')
         self.canvas = pygame.Surface((WIDTH, HEIGHT)).convert()
         self._fonts = {size: pygame.font.Font(str(ASSETS / 'Nunito-Bold.ttf'), size)
                        for size in (16, 18, 20, 22, 26, 32)}
@@ -289,9 +290,10 @@ class SnakeApp:
     def _draw_path(self):
         if self._path_surface is None:
             self._path_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            reference = SnakeNet(self.net.cols, self.net.rows)
             for y in range(14):
                 for x in range(18):
-                    logits = self.net.forward(x, y)
+                    logits = reference.forward(x, y)
                     action = max(range(4), key=lambda direction: logits[direction])
                     dx, dy = DIRECTIONS[action]
                     destination = (x + dx, y + dy)
@@ -392,16 +394,18 @@ class SnakeApp:
             for (rect, speed), label in zip(self._speed_buttons, ('Lento', 'Normale', 'Veloce')):
                 self._button(rect, label, selected=self.speed == speed)
             self._text(f'Velocità: {self.speed} passi/s   (+ / −)', (258, 388), size=16)
-            self._button(self._path_button, 'Percorso: visibile' if self.show_path else 'Mostra percorso', selected=self.show_path)
+            self._button(self._path_button, 'Ciclo di riferimento: visibile' if self.show_path else 'Mostra ciclo di riferimento', selected=self.show_path)
             self._text('La rete guida automaticamente il serpente.', (258, 470), size=16)
         elif self.overlay == 'help':
             self._text('Come giocare', (258, 225), size=26)
             for index, line in enumerate((
                 'La rete guida il serpente e raccoglie le mele.',
                 'Pesi scritti a mano, senza addestramento.',
-                'Segue un ciclo che attraversa ogni casella.',
+                ('Usa mela e corpo per scegliere scorciatoie.'
+                 if self.net.policy_name == 'shortcuts'
+                 else 'Segue un ciclo che attraversa ogni casella.'),
                 'Spazio: pausa     Frecce: riprendi',
-                'R: ricomincia     + / −: velocità     G: percorso',
+                'R: ricomincia     + / −: velocità     G: ciclo',
                 'F: schermo intero     M: suono     H: aiuto',
                 'Esc: chiudi il pannello oppure esci',
             )):

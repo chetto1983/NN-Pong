@@ -1,0 +1,48 @@
+{
+  "baseline": {
+    "policy": "cycle",
+    "games": 100,
+    "first_seed": 100,
+    "board": [
+      18,
+      14
+    ],
+    "parameters": 150,
+    "dense_parameters": 150,
+    "wins": 100,
+    "deaths": 0,
+    "timeouts": 0,
+    "min_score": 248,
+    "max_score": 248,
+    "mean_score": 248.0,
+    "total_steps": 1542751,
+    "mean_steps": 15427.51,
+    "shortcuts": 0,
+    "step_limit": 100000,
+    "runtime_seconds": 25.091376
+  },
+  "candidate": {
+    "policy": "shortcuts",
+    "games": 100,
+    "first_seed": 100,
+    "board": [
+      18,
+      14
+    ],
+    "parameters": 7166,
+    "dense_parameters": 991006,
+    "wins": 100,
+    "deaths": 0,
+    "timeouts": 0,
+    "min_score": 248,
+    "max_score": 248,
+    "mean_score": 248.0,
+    "total_steps": 838099,
+    "mean_steps": 8380.99,
+    "shortcuts": 62633,
+    "step_limit": 100000,
+    "runtime_seconds": 192.051964
+  },
+  "move_reduction_pct": 45.675031161866045,
+  "all_completed": true
+}
