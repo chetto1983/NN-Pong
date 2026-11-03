@@ -1,4 +1,8 @@
-# NN Pong
+# NN Pong e Snake
+
+Due giochi automatici controllati da reti con **pesi costruiti analiticamente**,
+senza addestramento: Pong e Snake Classic. Snake riprende la grafica del gioco
+su [snake-game.io](https://snake-game.io/) e usa una rete di 150 parametri.
 
 Pong automatico in Python e Pygame: la racchetta verde è controllata da una
 piccola rete ReLU con pesi costruiti analiticamente, senza addestramento.
@@ -20,6 +24,9 @@ Da PowerShell, nella cartella del progetto:
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe pong.py
+
+# Oppure Snake
+.\.venv\Scripts\python.exe snake.py
 ```
 
 Non serve attivare l'ambiente virtuale. Se `.venv` è già stato preparato, basta
@@ -108,3 +115,65 @@ docs/superpowers/            Decisioni e piano della migrazione
 Il precedente `pongNN.py` era un generatore che scriveva in `/mnt/data`, non
 un punto di avvio del gioco. È stato sostituito da `pong.py`; l'originale resta
 recuperabile nel primo commit della repository.
+
+## Snake Classic
+
+```powershell
+# Avvia la finestra Pygame
+.\.venv\Scripts\python.exe snake.py
+
+# Verifica ogni cella del ciclo e una partita completa
+.\.venv\Scripts\python.exe snake.py --test
+
+# Cento partite riproducibili, senza finestra
+.\.venv\Scripts\python.exe snake.py --headless --seeds 100
+
+# Usa i pesi inclusi nella repository
+.\.venv\Scripts\python.exe snake.py --weights weights/snake_classic.json
+
+# Esporta una nuova copia dei pesi analitici
+.\.venv\Scripts\python.exe snake.py --export-weights pesi.json
+```
+
+La finestra riprende **Classic, tema Sunset**: scacchiera arancione 18×14,
+serpente blu, mela rossa, font e icone del riferimento. Le altre modalità del
+sito non fanno parte di questa demo. Tutti gli asset sono locali e il gioco
+funziona offline; fonti in [snake_assets/SOURCES.md](snake_assets/SOURCES.md).
+
+| Controllo Snake | Azione |
+| --- | --- |
+| `Spazio` | Pausa / riprendi |
+| `R` | Nuova partita con lo stesso seed |
+| `+` / `-` | Velocità, da 1 a 120 mosse al secondo |
+| `G` | Mostra / nascondi il percorso del controllore |
+| `H` o icona `?` | Aiuto |
+| Ingranaggio | Velocità e visualizzazione del percorso |
+| `F` o icona schermo intero | Cambia visualizzazione |
+| Altoparlante | Attiva / disattiva il suono |
+| `Esc` | Chiudi il pannello aperto oppure esci |
+
+Il serpente parte automaticamente. Le frecce possono riprendere una pausa,
+ma la direzione rimane decisa dalla rete. Il record locale è salvato in
+`~/.nn-pong/snake-record.json`; le simulazioni headless non lo modificano.
+
+La rete **2 → 18 → 4 → 4** riceve soltanto la posizione della testa e produce
+quattro logits. I pesi codificano un ciclo che visita tutte le celle: non c'è
+training, pianificazione esterna delle mosse o inseguimento della mela in Python.
+È una strategia conservativa: raccoglie le mele percorrendo il ciclo, quindi può
+fare giri lunghi. La garanzia riguarda la politica costruita, il campo vuoto e
+il corpo inizializzato sul ciclo; modificare pesi, corpo o ostacoli può invalidarla.
+
+La demo dichiara vittoria quando occupa tutte le 252 celle (248 mele dopo i
+quattro segmenti iniziali). Questo stato terminale esplicito consente di misurare
+il completamento del controllore. `--headless` restituisce codice 1 se una partita
+muore o supera `--max-steps` (default 100.000); `--json` produce statistiche
+leggibili da altri programmi. `--seed` imposta il primo seed della serie.
+
+La costruzione matematica dei pesi è descritta in [docs/SNAKE.md](docs/SNAKE.md).
+I test Snake sono inclusi nel comando `python -m unittest discover -s tests -v`.
+
+Verifica locale: **54 test superati** complessivi; benchmark Snake sui seed
+0–99 con **100 vittorie su 100**, zero collisioni e 248 mele per partita.
+Media: 15.465,24 mosse per completare il campo.
+
+![Snake Classic in Pygame](docs/images/snake.png)

@@ -9,3 +9,7 @@ dist/
 *.egg-info/
 .DS_Store
 Thumbs.db
+output/
+.playwright-mcp/
+output/*
+.playwright-mcp/*

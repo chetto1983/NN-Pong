@@ -28,3 +28,5 @@ jobs:
       - run: python -m unittest discover -s tests -v
       - run: python pong.py --test
       - run: python pong.py --headless --seeds 10 --frames 1000
+      - run: python snake.py --test
+      - run: python snake.py --headless --seeds 5
