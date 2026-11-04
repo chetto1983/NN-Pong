@@ -2,14 +2,13 @@
 
 import copy
 import json
-from pathlib import Path
 import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 
 from snake_game import DOWN, LEFT, RIGHT, UP, SnakeNet, SnakeSimulation
-
 
 ROOT = Path(__file__).resolve().parents[1]
 DELTAS = ((0, -1), (1, 0), (0, 1), (-1, 0))

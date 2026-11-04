@@ -1,17 +1,17 @@
-"""Local Pygame presentation of the Classic / Sunset Snake board."""
+"""Local Pygame presentation of the Snake board, with procedurally drawn sprites."""
 
 from __future__ import annotations
 
-from array import array
 import json
 import math
+from array import array
 from pathlib import Path
 
 import pygame
 
+from . import sprites
 from .network import SnakeNet, create_network
 from .simulation import SnakeSimulation
-
 
 WIDTH, HEIGHT = 908, 801
 CELL = 48
@@ -21,7 +21,7 @@ HEADER = (100, 77, 31)
 TILES = ((251, 193, 78), (252, 178, 79))
 WHITE = (255, 255, 250)
 GREEN = (80, 174, 15)
-ASSETS = Path(__file__).resolve().parents[1] / 'snake_assets'
+ASSETS = Path(__file__).resolve().parent / 'assets'
 DIRECTIONS = ((0, -1), (1, 0), (0, 1), (-1, 0))
 
 
@@ -43,20 +43,10 @@ class SnakeApp:
         self.canvas = pygame.Surface((WIDTH, HEIGHT)).convert()
         self._fonts = {size: pygame.font.Font(str(ASSETS / 'Nunito-Bold.ttf'), size)
                        for size in (16, 18, 20, 22, 26, 32)}
-        self._apple = self._sprite('apple_types.webp', 256, 0, 60)
-        self._header_apple = self._sprite('apple_types.webp', 256, 0, 32)
-        self._trophy = self._sprite('trophy_types.webp', 128, 0, 32)
-        self._icons = {
-            name: pygame.transform.smoothscale(
-                pygame.image.load(str(ASSETS / filename)).convert_alpha(), (30, 30))
-            for name, filename in (
-                ('help', 'help_white_24dp.png'),
-                ('settings', 'settings_white_24dp.png'),
-                ('fullscreen', 'fullscreen_white_24dp.png'),
-                ('sound', 'volume_up_white_24dp.png'),
-                ('replay', 'refresh_white_24dp.png'),
-            )
-        }
+        self._apple = sprites.apple(60)
+        self._header_apple = sprites.apple(32)
+        self._trophy = sprites.trophy(32)
+        self._icons = sprites.icons(30)
         self._header_buttons = {
             name: pygame.Rect(x, 16, 38, 38)
             for name, x in zip(('help', 'settings', 'fullscreen', 'sound'), (748, 786, 824, 862))
@@ -100,11 +90,6 @@ class SnakeApp:
             except OSError:
                 # A read-only home folder must not stop a game in progress.
                 pass
-
-    def _sprite(self, filename, frame_width, index, size):
-        sheet = pygame.image.load(str(ASSETS / filename)).convert_alpha()
-        frame = sheet.subsurface((index * frame_width, 0, frame_width, frame_width))
-        return pygame.transform.smoothscale(frame, (size, size))
 
     def _make_beep(self):
         config = pygame.mixer.get_init()
@@ -390,11 +375,12 @@ class SnakeApp:
             pygame.draw.line(self.canvas, WHITE, (640, 233), (628, 245), 2)
         if self.overlay == 'settings':
             self._text('Impostazioni', (258, 225), size=26)
-            self._text('Classic · Sunset', (258, 286), size=20)
+            self._text('Snake classico · pesi analitici', (258, 286), size=20)
             for (rect, speed), label in zip(self._speed_buttons, ('Lento', 'Normale', 'Veloce')):
                 self._button(rect, label, selected=self.speed == speed)
             self._text(f'Velocità: {self.speed} passi/s   (+ / −)', (258, 388), size=16)
-            self._button(self._path_button, 'Ciclo di riferimento: visibile' if self.show_path else 'Mostra ciclo di riferimento', selected=self.show_path)
+            path_label = 'Ciclo di riferimento: visibile' if self.show_path else 'Mostra ciclo di riferimento'
+            self._button(self._path_button, path_label, selected=self.show_path)
             self._text('La rete guida automaticamente il serpente.', (258, 470), size=16)
         elif self.overlay == 'help':
             self._text('Come giocare', (258, 225), size=26)

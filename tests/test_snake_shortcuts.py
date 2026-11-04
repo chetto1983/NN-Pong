@@ -3,16 +3,15 @@
 import copy
 import importlib.util
 import json
-from pathlib import Path
 import random
 import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 
 from snake_game.network import SnakeNet
 from snake_game.simulation import SnakeSimulation
-
 
 if importlib.util.find_spec('snake_game.shortcut_network') is not None:
     from snake_game.shortcut_network import ShortcutSnakeNet, SparseLayer

@@ -139,7 +139,7 @@ class SnakeAppTests(unittest.TestCase):
         self.app.best_score = 248
         self.app.draw()
         font = pygame.font.Font(str(Path(__file__).resolve().parents[1]
-                                    / 'snake_assets' / 'Nunito-Bold.ttf'), 22)
+                                    / 'snake_game' / 'assets' / 'Nunito-Bold.ttf'), 22)
         text = font.render('248', True, (255, 255, 250))
         expected = pygame.Surface(text.get_size())
         expected.fill((100, 77, 31))

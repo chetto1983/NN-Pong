@@ -11,7 +11,6 @@ from pathlib import Path
 
 import numpy as np
 
-
 UP, RIGHT, DOWN, LEFT = range(4)
 WEIGHT_VERSION = 1
 

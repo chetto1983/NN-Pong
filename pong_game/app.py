@@ -1,18 +1,25 @@
 """Pygame presentation: a clear court, optional diagnostics and fixed-step motion."""
 
-from collections import deque
 import math
+from collections import deque
 from pathlib import Path
 
 import pygame
 import pygame.gfxdraw
 
 from .config import (
-    BALL_MIN_Y, BALL_R, BOTTOM, PADDLE_H, PADDLE_MARGIN,
-    PADDLE_W, PHYSICS_DT, SPAN, TOP, WIDTH,
+    BALL_MIN_Y,
+    BALL_R,
+    BOTTOM,
+    PADDLE_H,
+    PADDLE_MARGIN,
+    PADDLE_W,
+    PHYSICS_DT,
+    SPAN,
+    TOP,
+    WIDTH,
 )
 from .simulation import PongSimulation
-
 
 BG = (12, 19, 29)
 FIELD = (18, 29, 42)
@@ -44,7 +51,7 @@ class PongApp:
         self.screen = pygame.display.set_mode(initial_size, pygame.RESIZABLE)
         self.canvas = pygame.Surface(LOGICAL_SIZE).convert()
         self.clock = pygame.time.Clock()
-        font_path = Path(__file__).resolve().parents[1] / 'snake_assets' / 'Nunito-Bold.ttf'
+        font_path = Path(__file__).resolve().parents[1] / 'snake_game' / 'assets' / 'Nunito-Bold.ttf'
         font_file = str(font_path) if font_path.is_file() else None
         self.fonts = {size: pygame.font.Font(font_file, size)
                       for size in (12, 13, 14, 16, 18, 22, 24, 30, 60)}

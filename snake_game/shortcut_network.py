@@ -7,15 +7,14 @@ The completion guarantee applies to cycle-ordered states reached from the normal
 initial body with these weights; edited weights or arbitrary bodies can lose.
 """
 
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
 from numbers import Integral
 from pathlib import Path
 
 import numpy as np
 
 from .network import _dimensions
-
 
 WEIGHT_VERSION = 2
 _DIRECTIONS = ((0, -1), (1, 0), (0, 1), (-1, 0))
@@ -246,8 +245,15 @@ class ShortcutSnakeNet:
                 'weights': layer.weights.tolist(), 'bias': layer.bias.tolist(),
             } for layer in self.layers],
         }
-        Path(path).write_text(json.dumps(payload, indent=2, allow_nan=False) + '\n',
-                              encoding='utf-8')
+        # One compact line per layer keeps the file small and diffs readable.
+        def dump(value):
+            return json.dumps(value, separators=(',', ':'), allow_nan=False)
+
+        header = ',\n'.join(f' {dump(key)}:{dump(value)}'
+                             for key, value in payload.items() if key != 'layers')
+        layers = ',\n'.join(f'  {dump(layer)}' for layer in payload['layers'])
+        text = '{\n' + header + ',\n "layers":[\n' + layers + '\n ]\n}\n'
+        Path(path).write_text(text, encoding='utf-8')
 
     @classmethod
     def load(cls, path):

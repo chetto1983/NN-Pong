@@ -1,17 +1,16 @@
 """Integration contracts for state-aware control and baseline comparisons."""
 
 import json
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 
 from snake_game import SnakeNet, SnakeSimulation
 from snake_game.network import create_network, load_network
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
