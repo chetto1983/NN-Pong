@@ -114,24 +114,34 @@ def snake_states(net, seeds, stride):
     return np.array(xs), np.array(ys)
 
 
+def play_one(net, seed, max_steps):
+    """Play one game. A repeated (body, food) state means a deterministic loop:
+    the policy and the board are deterministic until the next apple."""
+    game = SnakeSimulation(seed=seed, cols=net.cols, rows=net.rows, net=net)
+    seen, score, looped = set(), 0, False
+    for _ in range(max_steps):
+        if game.score != score:
+            seen.clear()
+            score = game.score
+        key = (tuple(game.body), game.food)
+        if key in seen:
+            looped = True
+            break
+        seen.add(key)
+        if game.step() != 'running':
+            break
+    outcome = game.status if game.status != 'running' else ('loop' if looped else 'timeout')
+    return outcome, game.score, game.steps
+
+
 def play(net, seeds, max_steps):
-    wins = deaths = timeouts = 0
-    apples, win_steps = [], []
-    for seed in seeds:
-        game = SnakeSimulation(seed=seed, net=net)
-        for _ in range(max_steps):
-            if game.step() != 'running':
-                break
-        apples.append(game.score)
-        if game.status == 'won':
-            wins += 1
-            win_steps.append(game.steps)
-        elif game.status == 'dead':
-            deaths += 1
-        else:
-            timeouts += 1
-    return {'games': len(seeds), 'wins': wins, 'deaths': deaths, 'timeouts': timeouts,
-            'mean_apples': float(np.mean(apples)), 'max_apples': int(max(apples)),
+    results = [play_one(net, seed, max_steps) for seed in seeds]
+    outcomes = [r[0] for r in results]
+    win_steps = [r[2] for r in results if r[0] == 'won']
+    return {'games': len(results), 'wins': outcomes.count('won'), 'deaths': outcomes.count('dead'),
+            'loops': outcomes.count('loop'), 'timeouts': outcomes.count('timeout'),
+            'mean_apples': float(np.mean([r[1] for r in results])),
+            'max_apples': int(max(r[1] for r in results)),
             'mean_steps_when_won': float(np.mean(win_steps)) if win_steps else None}
 
 

@@ -5,6 +5,8 @@ import unittest
 import numpy as np
 
 from experiments.e1_pong_folds import MultiFoldNet, reference
+from experiments.e2_trained import play_one
+from experiments.e6_dagger import pack, unpack
 from experiments.mlp import MLP, mse
 from experiments.policies import greedy_action, shortcut_logits
 from pong_game.config import HEIGHT
@@ -50,6 +52,27 @@ class SnakePolicyTests(unittest.TestCase):
             action = greedy_action(game.body, game.food, game.cols, game.rows)
             self.assertIn(action, range(4))
             self.assertEqual(game.step(action), 'running')
+
+
+class LoopAndPackingTests(unittest.TestCase):
+    def test_packing_round_trip(self):
+        rng = np.random.default_rng(1)
+        states = rng.integers(0, 2, (5, 1008))
+        np.testing.assert_array_equal(unpack(pack(states), 1008), states)
+
+    def test_constant_policy_is_classified(self):
+        class Up:
+            cols, rows = 18, 14
+
+            def forward_state(self, body, food):
+                return np.array([1.0, 0, 0, 0])
+
+        outcome, apples, _ = play_one(Up(), 0, 1000)
+        self.assertEqual((outcome, apples), ('dead', 0))
+
+    def test_teacher_wins_without_loop_false_positive(self):
+        outcome, apples, _ = play_one(create_network('cycle', 6, 4), 0, 5000)
+        self.assertEqual((outcome, apples), ('won', 20))
 
 
 class MLPTests(unittest.TestCase):
