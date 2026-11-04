@@ -2,17 +2,32 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
 import random
+from dataclasses import dataclass
 
 from .config import (
-    BALL_MAX_Y, BALL_MIN_Y, BALL_R, BALL_SPEED, CONTROL_GAIN, HEIGHT,
-    MAX_BALL_SPEED, MIN_BALL_SPEED, PADDLE_FRICTION, PADDLE_MARGIN,
-    PADDLE_MAX_Y, PADDLE_MIN_Y, PADDLE_RADIUS, PADDLE_SEGMENT_HALF,
-    PADDLE_SPEED, PADDLE_W, PHYSICS_DT, SERVE_DELAY, SPAN, WIDTH,
+    BALL_MAX_Y,
+    BALL_MIN_Y,
+    BALL_R,
+    BALL_SPEED,
+    CONTROL_GAIN,
+    HEIGHT,
+    MAX_BALL_SPEED,
+    MIN_BALL_SPEED,
+    PADDLE_FRICTION,
+    PADDLE_MARGIN,
+    PADDLE_MAX_Y,
+    PADDLE_MIN_Y,
+    PADDLE_RADIUS,
+    PADDLE_SEGMENT_HALF,
+    PADDLE_SPEED,
+    PADDLE_W,
+    PHYSICS_DT,
+    SERVE_DELAY,
+    WIDTH,
 )
-from .network import PongNetV5, clamp, reflect_y
+from .network import PongNet, clamp, reflect_y, wrap_period
 
 _TIME_EPS = 1e-12
 _SPACE_EPS = 1e-8
@@ -21,7 +36,7 @@ _VELOCITY_EPS = 1e-9
 
 @dataclass
 class Stats:
-    frames: int = 0
+    steps: int = 0
     hits: int = 0
     misses: int = 0
     player_score: int = 0
@@ -32,7 +47,7 @@ class Stats:
 class PongSimulation:
     def __init__(self, seed=0, opponent_skill=0.82, trace=False):
         self.rng = random.Random(seed)
-        self.net = PongNetV5()
+        self.net = PongNet()
         self.opponent_skill = opponent_skill
         self.trace = trace
         self.reset()
@@ -71,8 +86,8 @@ class PongSimulation:
     def predict_player_intercept(self):
         """Return a periodic equivalent of the raw flight coordinate.
 
-        The unchanged finite ReLU network only needs one triangular period;
-        modulo normalization preserves any number of future wall bounces.
+        The modulo reduction is done here, in Python: it accounts for any
+        number of future wall bounces, so the network only has to fold once.
         raw_prediction remains available for diagnostics.
         """
         impact_x = PADDLE_MARGIN + PADDLE_W + BALL_R
@@ -81,7 +96,7 @@ class PongSimulation:
         else:
             flight = (impact_x - self.ball_x) / self.ball_vx
             self.raw_prediction = self.ball_y + self.ball_vy * flight
-        return BALL_MIN_Y + (self.raw_prediction - BALL_MIN_Y) % (2.0 * SPAN)
+        return wrap_period(self.raw_prediction)
 
     def _control(self, now):
         self.prediction = self.predict_player_intercept()
@@ -312,9 +327,9 @@ class PongSimulation:
                     self._advance(remaining)
                 break
         self.elapsed += dt
-        self.stats.frames += 1
+        self.stats.steps += 1
         if self.trace:
-            print(f"frame={self.stats.frames} t={self.elapsed:.3f} "
+            print(f"step={self.stats.steps} t={self.elapsed:.3f} "
                   f"ball=({self.ball_x:.1f},{self.ball_y:.1f}) "
                   f"pred={self.prediction:.1f} fold={self.fold:.1f} "
                   f"out={self.output:+.2f}")

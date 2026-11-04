@@ -69,11 +69,14 @@ in corrispondenza del goal.
 
 ## Previsione della rete
 
-La rete resta una ReLU 2→8→2→1 con 45 parametri analitici. Python calcola
-l'intercetto grezzo sul piano frontale della racchetta, poi normalizza la
-coordinata con il periodo `2*SPAN`. La rete calcola il fold e la correzione
-della racchetta. La normalizzazione conserva i rimbalzi invece di tagliare
-la previsione a un limite arbitrario.
+La rete è una ReLU 2→2→2→1 con 15 parametri analitici. Python calcola
+l'intercetto grezzo sul piano frontale della racchetta e lo riduce modulo il
+periodo `2*SPAN` (`wrap_period`): **questa riduzione, che gestisce un numero
+qualsiasi di rimbalzi, è codice Python, non rete**. La rete esegue un solo
+ripiegamento triangolare, il confronto con la racchetta e la zona morta.
+
+La versione precedente (2→8→2→1, 45 parametri) dava gli stessi comandi, ma
+5 delle 8 unità nascoste non si attivavano mai dopo la riduzione modulo.
 
 Il punto previsto assume volo libero e rimbalzi sulle pareti fino al piano
 frontale: un contatto anticipato con la calotta della racchetta segue invece

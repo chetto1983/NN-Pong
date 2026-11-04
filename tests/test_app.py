@@ -29,7 +29,7 @@ class AppTests(unittest.TestCase):
         game = app.game
         return (game.ball_x, game.ball_y, game.ball_vx, game.ball_vy,
                 game.player_y, game.opponent_y, game.stats.player_score,
-                game.stats.opponent_score, game.stats.frames)
+                game.stats.opponent_score, game.stats.steps)
 
     def test_diagnostics_start_hidden_and_open_outside_playing_field(self):
         self.assertFalse(self.app.show_graph)
@@ -52,7 +52,7 @@ class AppTests(unittest.TestCase):
             for _ in range(fps):
                 app.update(1 / fps)
             self.assertAlmostEqual(app.game.elapsed, 1.0)
-            self.assertEqual(app.game.stats.frames, 120)
+            self.assertEqual(app.game.stats.steps, 120)
             states.append(self.state(app))
         self.assertEqual(states[0], states[1])
         self.assertEqual(states[1], states[2])
@@ -188,7 +188,7 @@ class AppTests(unittest.TestCase):
         self.assertEqual(self.app.viewport_rect, pygame.Rect(0, 0, 720, 450))
         self.app.handle_event(pygame.event.Event(
             pygame.MOUSEBUTTONDOWN, button=1, pos=(170, 413)))
-        self.assertEqual(self.app.game.stats.frames, 0)
+        self.assertEqual(self.app.game.stats.steps, 0)
         self.assertTrue(self.app.show_graph)
         self.app.handle_event(pygame.event.Event(
             pygame.MOUSEBUTTONDOWN, button=1, pos=(505, 413)))

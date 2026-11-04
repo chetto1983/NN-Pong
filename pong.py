@@ -15,8 +15,8 @@ import argparse
 import random
 
 from pong_game.config import *
-from pong_game.network import PongNetV5, clamp, reflect_y
-from pong_game.simulation import PongSimulation, Stats
+from pong_game.network import PongNet, PongNetV5, clamp, reflect_y, wrap_period  # noqa: F401  (public names)
+from pong_game.simulation import PongSimulation, Stats  # noqa: F401
 
 
 def __getattr__(name):
@@ -33,14 +33,14 @@ def __getattr__(name):
 
 
 def test_network(samples=50000):
-    net = PongNetV5()
+    net = PongNet()
     rng = random.Random(2026)
     max_fold_err = 0.0
     max_out_err = 0.0
     for _ in range(samples):
         y = rng.uniform(-2 * SPAN + 1, 2.9 * SPAN)
-        paddle = rng.uniform(-100, HEIGHT + 100)
-        out, info = net.forward(paddle, y)
+        paddle = rng.uniform(0, HEIGHT)
+        out, info = net.forward(paddle, wrap_period(y))
         expected_fold = reflect_y(y)
         expected_out = (max(0, expected_fold - paddle - DEADZONE)
                         - max(0, paddle - expected_fold - DEADZONE))
@@ -48,6 +48,7 @@ def test_network(samples=50000):
         max_out_err = max(max_out_err, abs(out - expected_out))
     assert max_fold_err < 1e-7, max_fold_err
     assert max_out_err < 1e-7, max_out_err
+    print(f"PASS rete {net.parameter_count} parametri")
     print(f"PASS fold: {samples} campioni, errore max {max_fold_err:.3e}")
     print(f"PASS output: {samples} campioni, errore max {max_out_err:.3e}")
 

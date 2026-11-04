@@ -2,12 +2,12 @@
 
 import json
 import math
-from pathlib import Path
 import subprocess
 import sys
 import unittest
+from pathlib import Path
 
-from pong_game import PongSimulation, BALL_SPEED, PADDLE_SPEED, Stats
+from pong_game import BALL_SPEED, PADDLE_SPEED, PongSimulation, Stats
 
 
 class ContinuousPhysicsTests(unittest.TestCase):
@@ -23,7 +23,7 @@ class ContinuousPhysicsTests(unittest.TestCase):
         self.assertAlmostEqual(game.ball_x, 410)
         self.assertAlmostEqual(game.ball_y, 355)
         self.assertAlmostEqual(game.elapsed, 0.25)
-        self.assertEqual(game.stats.frames, 1)
+        self.assertEqual(game.stats.steps, 1)
 
     def test_step_size_does_not_change_uncontrolled_motion(self):
         whole = self.game(x=200, y=320, vx=-600, vy=120)
@@ -196,7 +196,7 @@ class ContinuousPhysicsTests(unittest.TestCase):
         game = self.game(vx=360)
         game.step(0)
         self.assertEqual(game.ball_x, 500)
-        self.assertEqual(game.stats.frames, 0)
+        self.assertEqual(game.stats.steps, 0)
         for dt in (-1, math.inf, math.nan):
             with self.subTest(dt=dt), self.assertRaises(ValueError):
                 game.step(dt)

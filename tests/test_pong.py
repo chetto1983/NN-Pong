@@ -1,30 +1,54 @@
 """Regressioni della rete, della fisica e dell'interfaccia da terminale."""
 
-from pathlib import Path
 import subprocess
 import sys
 import unittest
+from pathlib import Path
 
 import pong
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class NetworkTests(unittest.TestCase):
     def test_fold_accounts_for_ball_radius(self):
-        net = pong.PongNetV5()
+        net = pong.PongNet()
         # Coordinate del centro palla e risultati calcolati a mano.
         for raw, expected in ((16, 16), (634, 634), (644, 624),
                               (6, 26), (1000, 268), (1252, 16),
                               (-1220, 16)):
             with self.subTest(raw=raw):
-                _, info = net.forward(325, raw)
+                _, info = net.forward(325, pong.wrap_period(raw))
                 self.assertAlmostEqual(info['fold'], expected)
                 self.assertAlmostEqual(pong.reflect_y(raw), expected)
 
+    def test_network_has_fifteen_parameters(self):
+        self.assertEqual(pong.PongNet().parameter_count, 15)
+
+    def test_matches_reference_controller_on_whole_domain(self):
+        net = pong.PongNet()
+        for paddle in range(0, pong.HEIGHT + 1, 13):
+            for raw in range(-1300, 1900, 7):
+                y = pong.wrap_period(raw)
+                error = pong.reflect_y(raw) - paddle
+                expected = max(0, error - pong.DEADZONE) - max(0, -error - pong.DEADZONE)
+                output, info = net.forward(paddle, y)
+                self.assertAlmostEqual(output, expected, places=9)
+                # The first hidden unit never switches off on the domain.
+                self.assertGreater(info['layer1'][0], 0)
+
+    def test_period_endpoint_folds_to_top_wall(self):
+        _, info = pong.PongNet().forward(325, pong.BALL_MIN_Y + 2 * pong.SPAN)
+        self.assertAlmostEqual(info['fold'], pong.BALL_MIN_Y)
+
+    def test_inputs_outside_domain_are_rejected(self):
+        net = pong.PongNet()
+        for paddle, y in ((325, pong.BALL_MIN_Y - 1), (325, 1300), (-1, 300), (pong.HEIGHT + 1, 300)):
+            with self.subTest(paddle=paddle, y=y), self.assertRaises(ValueError):
+                net.forward(paddle, y)
+
     def test_deadzone_and_direction(self):
-        net = pong.PongNetV5()
+        net = pong.PongNet()
         for target, expected in ((180, -16), (195, -1), (196, 0),
                                  (200, 0), (204, 0), (205, 1), (220, 16)):
             with self.subTest(target=target):
@@ -33,7 +57,7 @@ class NetworkTests(unittest.TestCase):
 
     def test_negative_deadzone_is_rejected(self):
         with self.assertRaises(ValueError):
-            pong.PongNetV5(delta=-1)
+            pong.PongNet(delta=-1)
 
 
 class SimulationTests(unittest.TestCase):
