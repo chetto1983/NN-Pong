@@ -106,8 +106,11 @@ python pong.py --headless --seeds 100 --frames 10000 # 1.000.000 di passi da 1/6
 ```
 
 Risultato dello stress test: 3.019 respinte, **zero palle mancate** dalla rete,
-punteggio aggregato 38–0. Misura la difesa contro l'avversario incluso, non contro
-ogni avversario possibile. `--seeds` e `--frames` richiedono interi positivi.
+punteggio aggregato 38–0. Attenzione: a questa velocità non manca nessuna palla
+nemmeno una racchetta che segue la palla senza previsione, quindi il test non
+distingue la rete da un controllore banale; la differenza appare da 2× la
+velocità di servizio ([E1](docs/EXPERIMENTS.md#e1--rimbalzi-dentro-o-fuori-dalla-rete-pong)).
+`--seeds` e `--frames` richiedono interi positivi.
 
 ## Snake
 
@@ -165,6 +168,18 @@ Zero collisioni e 248 mele per partita in tutti i casi. Report JSON e
 protocollo in [docs/benchmarks](docs/benchmarks/README.md). La rete con
 scorciatoie è più grande e costa più CPU: il guadagno è nel numero di mosse.
 
+## Esperimenti
+
+[docs/EXPERIMENTS.md](docs/EXPERIMENTS.md) raccoglie cinque esperimenti
+riproducibili (codice in [`experiments/`](experiments)): costo di spostare i
+rimbalzi dentro la rete Pong, confronto con reti addestrate, robustezza a rumore
+e precisione numerica, Snake contro un greedy e su altre dimensioni del campo,
+costo della forma neurale. In breve: i pesi analitici danno esattezza e
+garanzie di completamento che l'imitazione addestrata non raggiunge (0 vittorie
+su 60 partite con il 95% di accuratezza), ma la rete Snake con scorciatoie non
+regge errori relativi di 10⁻⁴ né bfloat16, e ogni decisione costa 10–100 volte
+la stessa regola in Python.
+
 ## Sviluppo
 
 ```bash
@@ -183,7 +198,8 @@ snake_game/              regole, reti, sprite disegnati in codice, renderer di S
 snake_game/assets/       font Nunito (OFL)
 weights/                 pesi Snake esportati
 tests/                   test unitari, di regressione e di rendering
-docs/                    costruzione delle reti, fisica, benchmark
+experiments/             esperimenti E1–E5 (risultati in docs/experiments/)
+docs/                    costruzione delle reti, fisica, benchmark, esperimenti
 ```
 
 ## Licenza
