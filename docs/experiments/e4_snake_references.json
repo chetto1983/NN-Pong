@@ -18,7 +18,7 @@
    "steps_per_apple_first_half": 34.623224043715844,
    "steps_per_apple_second_half": 31.761111111111113,
    "share_of_steps_in_second_half": 0.486239883497377,
-   "seconds": 40.4
+   "seconds": 69.1
   },
   "cycle": {
    "games": 30,
@@ -33,7 +33,7 @@
    "steps_per_apple_first_half": 93.85027322404372,
    "steps_per_apple_second_half": 31.36613756613756,
    "share_of_steps_in_second_half": 0.25668531720084464,
-   "seconds": 5.0
+   "seconds": 6.4
   },
   "greedy_bfs": {
    "games": 30,
@@ -48,7 +48,7 @@
    "steps_per_apple_first_half": 20.7576112412178,
    "steps_per_apple_second_half": 54.358276643990926,
    "share_of_steps_in_second_half": 0.7281404004176214,
-   "seconds": 240.5
+   "seconds": 1089.3
   }
  },
  "board_sizes": [
