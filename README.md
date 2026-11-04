@@ -182,15 +182,20 @@ scorciatoie è più grande e costa più CPU: il guadagno è nel numero di mosse.
 
 ## Esperimenti
 
-[docs/EXPERIMENTS.md](docs/EXPERIMENTS.md) raccoglie cinque esperimenti
+[docs/EXPERIMENTS.md](docs/EXPERIMENTS.md) raccoglie sei esperimenti
 riproducibili (codice in [`experiments/`](experiments)): costo di spostare i
-rimbalzi dentro la rete Pong, confronto con reti addestrate, robustezza a rumore
-e precisione numerica, Snake contro un greedy e su altre dimensioni del campo,
-costo della forma neurale. In breve: i pesi analitici danno esattezza e
-garanzie di completamento che l'imitazione addestrata non raggiunge (0 vittorie
-su 60 partite con il 95% di accuratezza), ma la rete Snake con scorciatoie non
+rimbalzi dentro la rete Pong, confronto con reti addestrate per imitazione e con
+DAgger, robustezza a rumore e precisione numerica, Snake contro un greedy e su
+altre dimensioni del campo, costo della forma neurale, confronto con l'articolo
+di partenza.
+
+In breve: i pesi analitici danno esattezza e garanzie di completamento che
+l'addestramento provato non raggiunge (imitazione 0/60 vittorie; DAgger arriva a
+~30 mele su 248, 0/20 vittorie). In compenso la rete Snake con scorciatoie non
 regge errori relativi di 10⁻⁴ né bfloat16, e ogni decisione costa 10–100 volte
-la stessa regola in Python.
+la stessa regola in Python. Gli esperimenti **non** dimostrano che un LLM batta
+l'addestramento: l'algoritmo era noto e le reti addestrate imparano dal maestro
+analitico.
 
 ## Sviluppo
 
@@ -210,7 +215,7 @@ snake_game/              regole, reti, sprite disegnati in codice, renderer di S
 snake_game/assets/       font Nunito (OFL)
 weights/                 pesi Snake esportati
 tests/                   test unitari, di regressione e di rendering
-experiments/             esperimenti E1–E5 (risultati in docs/experiments/)
+experiments/             esperimenti E1–E6 (risultati in docs/experiments/)
 docs/                    costruzione delle reti, fisica, benchmark, esperimenti
 ```
 
