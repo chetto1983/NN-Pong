@@ -11,11 +11,11 @@
    "max_abs_error": 0.0,
    "games": {
     "speed_x1": {
-     "hits": 147,
+     "hits": 154,
      "misses": 0
     },
     "speed_x3": {
-     "hits": 491,
+     "hits": 463,
      "misses": 0
     }
    }
@@ -30,41 +30,17 @@
     ],
     "init": 0,
     "parameters": 15,
-    "train_seconds": 6.2,
+    "train_seconds": 11.6,
     "max_abs_error": 315.9401550292969,
     "rmse": 176.08978271484375,
     "wrong_direction_rate": 0.2356063492063492,
     "games": {
      "speed_x1": {
-      "hits": 33,
-      "misses": 120
+      "hits": 37,
+      "misses": 129
      },
      "speed_x3": {
-      "hits": 86,
-      "misses": 322
-     }
-    }
-   },
-   {
-    "sizes": [
-     2,
-     2,
-     2,
-     1
-    ],
-    "init": 1,
-    "parameters": 15,
-    "train_seconds": 6.3,
-    "max_abs_error": 316.35174560546875,
-    "rmse": 176.08824157714844,
-    "wrong_direction_rate": 0.2355809523809524,
-    "games": {
-     "speed_x1": {
-      "hits": 43,
-      "misses": 114
-     },
-     "speed_x3": {
-      "hits": 87,
+      "hits": 94,
       "misses": 332
      }
     }
@@ -76,20 +52,44 @@
      2,
      1
     ],
+    "init": 1,
+    "parameters": 15,
+    "train_seconds": 12.8,
+    "max_abs_error": 316.35174560546875,
+    "rmse": 176.08824157714844,
+    "wrong_direction_rate": 0.2355809523809524,
+    "games": {
+     "speed_x1": {
+      "hits": 41,
+      "misses": 128
+     },
+     "speed_x3": {
+      "hits": 87,
+      "misses": 337
+     }
+    }
+   },
+   {
+    "sizes": [
+     2,
+     2,
+     2,
+     1
+    ],
     "init": 2,
     "parameters": 15,
-    "train_seconds": 5.6,
+    "train_seconds": 11.5,
     "max_abs_error": 628.877197265625,
     "rmse": 254.51197814941406,
     "wrong_direction_rate": 0.4985142857142857,
     "games": {
      "speed_x1": {
-      "hits": 46,
-      "misses": 136
+      "hits": 44,
+      "misses": 124
      },
      "speed_x3": {
-      "hits": 101,
-      "misses": 319
+      "hits": 94,
+      "misses": 329
      }
     }
    },
@@ -101,17 +101,17 @@
     ],
     "init": 0,
     "parameters": 33,
-    "train_seconds": 4.8,
+    "train_seconds": 11.4,
     "max_abs_error": 7.998171329498291,
     "rmse": 2.2777771949768066,
     "wrong_direction_rate": 0.0,
     "games": {
      "speed_x1": {
-      "hits": 147,
+      "hits": 154,
       "misses": 0
      },
      "speed_x3": {
-      "hits": 491,
+      "hits": 463,
       "misses": 0
      }
     }
@@ -124,17 +124,17 @@
     ],
     "init": 1,
     "parameters": 33,
-    "train_seconds": 5.7,
+    "train_seconds": 11.1,
     "max_abs_error": 8.001413345336914,
     "rmse": 2.2763047218322754,
     "wrong_direction_rate": 0.0,
     "games": {
      "speed_x1": {
-      "hits": 147,
+      "hits": 154,
       "misses": 0
      },
      "speed_x3": {
-      "hits": 490,
+      "hits": 462,
       "misses": 0
      }
     }
@@ -147,17 +147,17 @@
     ],
     "init": 2,
     "parameters": 33,
-    "train_seconds": 5.6,
+    "train_seconds": 10.1,
     "max_abs_error": 12.594440460205078,
     "rmse": 2.281491994857788,
     "wrong_direction_rate": 2.5396825396825397e-05,
     "games": {
      "speed_x1": {
-      "hits": 147,
+      "hits": 154,
       "misses": 0
      },
      "speed_x3": {
-      "hits": 486,
+      "hits": 459,
       "misses": 0
      }
     }
@@ -170,17 +170,17 @@
     ],
     "init": 0,
     "parameters": 129,
-    "train_seconds": 5.1,
+    "train_seconds": 9.8,
     "max_abs_error": 7.405105113983154,
     "rmse": 2.0519134998321533,
     "wrong_direction_rate": 0.0,
     "games": {
      "speed_x1": {
-      "hits": 147,
+      "hits": 155,
       "misses": 0
      },
      "speed_x3": {
-      "hits": 490,
+      "hits": 462,
       "misses": 0
      }
     }
@@ -193,17 +193,17 @@
     ],
     "init": 1,
     "parameters": 129,
-    "train_seconds": 6.3,
+    "train_seconds": 10.3,
     "max_abs_error": 7.086071491241455,
     "rmse": 2.1894097328186035,
     "wrong_direction_rate": 0.0,
     "games": {
      "speed_x1": {
-      "hits": 147,
+      "hits": 154,
       "misses": 0
      },
      "speed_x3": {
-      "hits": 490,
+      "hits": 462,
       "misses": 0
      }
     }
@@ -216,17 +216,17 @@
     ],
     "init": 2,
     "parameters": 129,
-    "train_seconds": 5.8,
+    "train_seconds": 11.1,
     "max_abs_error": 6.617331027984619,
     "rmse": 1.7049229145050049,
     "wrong_direction_rate": 0.0,
     "games": {
      "speed_x1": {
-      "hits": 147,
+      "hits": 154,
       "misses": 0
      },
      "speed_x3": {
-      "hits": 493,
+      "hits": 465,
       "misses": 0
      }
     }
@@ -240,17 +240,17 @@
     ],
     "init": 0,
     "parameters": 1185,
-    "train_seconds": 7.7,
+    "train_seconds": 13.9,
     "max_abs_error": 8.37432861328125,
     "rmse": 1.581120252609253,
     "wrong_direction_rate": 0.0,
     "games": {
      "speed_x1": {
-      "hits": 147,
+      "hits": 154,
       "misses": 0
      },
      "speed_x3": {
-      "hits": 490,
+      "hits": 455,
       "misses": 0
      }
     }
@@ -264,17 +264,17 @@
     ],
     "init": 1,
     "parameters": 1185,
-    "train_seconds": 7.8,
+    "train_seconds": 16.6,
     "max_abs_error": 8.385852813720703,
     "rmse": 1.7897181510925293,
     "wrong_direction_rate": 0.0,
     "games": {
      "speed_x1": {
-      "hits": 147,
+      "hits": 154,
       "misses": 0
      },
      "speed_x3": {
-      "hits": 479,
+      "hits": 453,
       "misses": 0
      }
     }
@@ -288,17 +288,17 @@
     ],
     "init": 2,
     "parameters": 1185,
-    "train_seconds": 6.9,
+    "train_seconds": 23.9,
     "max_abs_error": 6.006962776184082,
     "rmse": 1.3589675426483154,
     "wrong_direction_rate": 0.0,
     "games": {
      "speed_x1": {
-      "hits": 148,
+      "hits": 154,
       "misses": 0
      },
      "speed_x3": {
-      "hits": 493,
+      "hits": 465,
       "misses": 0
      }
     }
@@ -317,6 +317,7 @@
     "games": 20,
     "wins": 20,
     "deaths": 0,
+    "loops": 0,
     "timeouts": 0,
     "mean_apples": 248.0,
     "max_apples": 248,
@@ -331,14 +332,15 @@
      4
     ],
     "parameters": 64836,
-    "train_seconds": 96.3,
+    "train_seconds": 83.8,
     "train_accuracy": 0.9589729124773664,
     "test_accuracy": 0.9414382086981484,
     "play": {
      "games": 20,
      "wins": 0,
      "deaths": 0,
-     "timeouts": 20,
+     "loops": 20,
+     "timeouts": 0,
      "mean_apples": 2.05,
      "max_apples": 5,
      "mean_steps_when_won": null
@@ -351,14 +353,15 @@
      4
     ],
     "parameters": 259332,
-    "train_seconds": 92.0,
+    "train_seconds": 280.0,
     "train_accuracy": 0.9833853488985742,
     "test_accuracy": 0.9470001435338022,
     "play": {
      "games": 20,
      "wins": 0,
      "deaths": 0,
-     "timeouts": 20,
+     "loops": 20,
+     "timeouts": 0,
      "mean_apples": 0.0,
      "max_apples": 0,
      "mean_steps_when_won": null
@@ -372,14 +375,15 @@
      4
     ],
     "parameters": 325124,
-    "train_seconds": 85.0,
+    "train_seconds": 681.2,
     "train_accuracy": 1.0,
     "test_accuracy": 0.9470719104349075,
     "play": {
      "games": 20,
      "wins": 0,
      "deaths": 1,
-     "timeouts": 19,
+     "loops": 19,
+     "timeouts": 0,
      "mean_apples": 2.1,
      "max_apples": 7,
      "mean_steps_when_won": null
