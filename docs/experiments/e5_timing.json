@@ -1,0 +1,31 @@
+{
+ "experiment": "e5_timing",
+ "python": "3.13.18",
+ "numpy": "2.5.4",
+ "pong": {
+  "single_us": {
+   "network": 8.01538920004532,
+   "python": 0.6199664000632765,
+   "ratio": 12.928747750244584
+  },
+  "batched_numpy_us_per_item": {
+   "network": 0.009109479997277958,
+   "python": 0.021168969997233944,
+   "ratio": 0.43032230658687004
+  }
+ },
+ "snake": {
+  "states_checked_identical": 1546,
+  "shortcuts_us": {
+   "network_total": 232.85173999981149,
+   "of_which_encode_and_validate": 181.18415333356097,
+   "python_rule": 11.915336000129173,
+   "ratio": 19.54218831909458
+  },
+  "cycle_us": {
+   "network": 7.879384666618232,
+   "python_lookup_table": 0.07767200016436013,
+   "ratio": 101.44433837090364
+  }
+ }
+}

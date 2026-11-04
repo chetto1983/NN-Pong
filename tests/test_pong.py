@@ -126,6 +126,14 @@ class CommandLineTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('STRESS 2 seed x 20 frame = 40 frame', result.stdout)
 
+    def test_speed_and_tracking_options(self):
+        result = self.run_cli('--headless', '--seeds', '1', '--frames', '20', '--speed', '3', '--tracking')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('servizio x3 (1080 px/s), controllo: inseguimento senza previsione', result.stdout)
+        for value in ('0', '-1', 'inf', 'nan'):
+            with self.subTest(value=value):
+                self.assertEqual(self.run_cli('--headless', '--speed', value).returncode, 2)
+
     def test_nonpositive_counts_are_rejected(self):
         for option in ('--frames', '--seeds'):
             for value in ('0', '-1'):

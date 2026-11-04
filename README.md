@@ -79,14 +79,17 @@ la corallo da una strategia deterministica di confronto, volutamente imprecisa.
 Fuori dal dominio (`y` non ridotta o racchetta fuori campo) `forward` solleva
 `ValueError` invece di restituire un comando sbagliato. La rete precedente,
 2 → 8 → 2 → 1 con 45 parametri, produceva gli stessi comandi, ma 5 delle 8 unità
-nascoste non si attivavano mai: lo stress test sotto dà risultati identici.
+nascoste non si attivavano mai: gli stress test davano risultati identici.
 
 ### Fisica
 
 Velocità costante fra gli urti; collisioni calcolate al tempo esatto di contatto
 fra il cerchio della palla e le racchette a capsula, anche a velocità che
 supererebbero lo spessore della racchetta. Sulle racchette contano anche il loro
-movimento e l'attrito tangenziale con spin. Passi fisici di 1/120 s con
+movimento e l'attrito tangenziale con spin. Dopo un colpo la direzione resta
+entro 60° dall'orizzontale, come nel Pong classico: senza questo limite un urto
+sulla calotta arrotondata poteva lasciare la palla quasi verticale e bloccare lo
+scambio per minuti. Passi fisici di 1/120 s con
 interpolazione grafica. Dettagli e limiti in [docs/PONG_PHYSICS.md](docs/PONG_PHYSICS.md).
 
 | Tasto | Azione |
@@ -102,12 +105,24 @@ interpolazione grafica. Dettagli e limiti in [docs/PONG_PHYSICS.md](docs/PONG_PH
 
 ```bash
 python pong.py --test                                # rete contro la formula di riferimento, 50.000 campioni
-python pong.py --headless --seeds 100 --frames 10000 # 1.000.000 di passi da 1/60 s, senza finestra
+python pong.py --headless --seeds 100 --frames 10000 --speed 3             # benchmark
+python pong.py --headless --seeds 100 --frames 10000 --speed 3 --tracking  # controllo senza previsione
 ```
 
-Risultato dello stress test: 3.019 respinte, **zero palle mancate** dalla rete,
-punteggio aggregato 38–0. Misura la difesa contro l'avversario incluso, non contro
-ogni avversario possibile. `--seeds` e `--frames` richiedono interi positivi.
+Ogni comando simula 1.000.000 di passi da 1/60 s senza finestra. `--speed`
+moltiplica la velocità di servizio; `--tracking` è un controllo in cui la rete
+riceve la quota attuale della palla invece della previsione.
+
+| Servizio | Rete con previsione: mancate / respinte | Inseguimento senza previsione |
+| --- | ---: | ---: |
+| 1× (360 px/s) | 0 / 2.962 | 0 / 3.023 |
+| 3× (1.080 px/s) | **0 / 8.961** | **58 / 9.531** |
+
+A velocità normale nessuno dei due manca una palla, quindi quel test non
+distingue la rete da un controllore banale: il benchmark di riferimento è a 3×
+([E1](docs/EXPERIMENTS.md#e1--rimbalzi-dentro-o-fuori-dalla-rete-pong)). I numeri
+misurano la difesa contro l'avversario incluso, non contro ogni avversario.
+`--seeds` e `--frames` richiedono interi positivi, `--speed` un numero positivo.
 
 ## Snake
 
@@ -165,6 +180,23 @@ Zero collisioni e 248 mele per partita in tutti i casi. Report JSON e
 protocollo in [docs/benchmarks](docs/benchmarks/README.md). La rete con
 scorciatoie è più grande e costa più CPU: il guadagno è nel numero di mosse.
 
+## Esperimenti
+
+[docs/EXPERIMENTS.md](docs/EXPERIMENTS.md) raccoglie sei esperimenti
+riproducibili (codice in [`experiments/`](experiments)): costo di spostare i
+rimbalzi dentro la rete Pong, confronto con reti addestrate per imitazione e con
+DAgger, robustezza a rumore e precisione numerica, Snake contro un greedy e su
+altre dimensioni del campo, costo della forma neurale, confronto con l'articolo
+di partenza.
+
+In breve: i pesi analitici danno esattezza e garanzie di completamento che
+l'addestramento provato non raggiunge (imitazione 0/60 vittorie; DAgger arriva a
+~30 mele su 248, 0/20 vittorie). In compenso la rete Snake con scorciatoie non
+regge errori relativi di 10⁻⁴ né bfloat16, e ogni decisione costa 10–100 volte
+la stessa regola in Python. Gli esperimenti **non** dimostrano che un LLM batta
+l'addestramento: l'algoritmo era noto e le reti addestrate imparano dal maestro
+analitico.
+
 ## Sviluppo
 
 ```bash
@@ -183,7 +215,8 @@ snake_game/              regole, reti, sprite disegnati in codice, renderer di S
 snake_game/assets/       font Nunito (OFL)
 weights/                 pesi Snake esportati
 tests/                   test unitari, di regressione e di rendering
-docs/                    costruzione delle reti, fisica, benchmark
+experiments/             esperimenti E1–E6 (risultati in docs/experiments/)
+docs/                    costruzione delle reti, fisica, benchmark, esperimenti
 ```
 
 ## Licenza

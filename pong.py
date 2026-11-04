@@ -59,11 +59,11 @@ def test_network(samples=50000):
     print("PASS deadzone: confini e valori interni/esterni")
 
 
-def stress_test(seeds=100, frames=10000):
+def stress_test(seeds=100, frames=10000, speed=1.0, tracking=False):
     total_hits = total_misses = total_player = total_opponent = 0
     worst_misses = 0
     for seed in range(seeds):
-        sim = PongSimulation(seed=seed)
+        sim = PongSimulation(seed=seed, serve_speed=BALL_SPEED * speed, tracking=tracking)
         for _ in range(frames):
             sim.step()
         s = sim.stats
@@ -72,7 +72,9 @@ def stress_test(seeds=100, frames=10000):
         total_player += s.player_score
         total_opponent += s.opponent_score
         worst_misses = max(worst_misses, s.misses)
+    label = "inseguimento senza previsione" if tracking else "rete con previsione"
     print(f"STRESS {seeds} seed x {frames} frame = {seeds*frames:,} frame")
+    print(f"servizio x{speed:g} ({BALL_SPEED * speed:.0f} px/s), controllo: {label}")
     print(f"hits={total_hits} misses={total_misses} worst_misses/seed={worst_misses}")
     print(f"score aggregato P1-P2: {total_player}-{total_opponent}")
     return total_hits, total_misses
@@ -84,6 +86,13 @@ def positive_int(value: str) -> int:
         raise argparse.ArgumentTypeError("deve essere un intero maggiore di zero")
     return number
 
+def positive_float(value: str) -> float:
+    number = float(value)
+    if not number > 0 or number == float("inf"):
+        raise argparse.ArgumentTypeError("deve essere un numero finito maggiore di zero")
+    return number
+
+
 def main():
     parser = argparse.ArgumentParser(description="NN Pong")
     mode = parser.add_mutually_exclusive_group()
@@ -91,11 +100,15 @@ def main():
     mode.add_argument("--headless", action="store_true")
     parser.add_argument("--frames", type=positive_int, default=10000)
     parser.add_argument("--seeds", type=positive_int, default=1)
+    parser.add_argument("--speed", type=positive_float, default=1.0,
+                        help="moltiplicatore della velocità di servizio (benchmark: 3)")
+    parser.add_argument("--tracking", action="store_true",
+                        help="controllo: la rete riceve ball_y invece della previsione")
     args = parser.parse_args()
     if args.test:
         test_network()
     elif args.headless:
-        stress_test(args.seeds, args.frames)
+        stress_test(args.seeds, args.frames, args.speed, args.tracking)
     else:
         from pong_game.app import PongApp
         PongApp().run()

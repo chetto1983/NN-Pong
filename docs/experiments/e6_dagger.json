@@ -1,0 +1,244 @@
+{
+ "experiment": "e6_dagger",
+ "python": "3.13.18",
+ "numpy": "2.5.4",
+ "architecture": [
+  1008,
+  256,
+  256,
+  4
+ ],
+ "parameters": 325124,
+ "teacher_parameters_stored": 7166,
+ "settings": {
+  "iterations": 10,
+  "hidden": [
+   256,
+   256
+  ],
+  "initial_games": 40,
+  "games_per_iteration": 20,
+  "rollout_steps": 3000,
+  "epochs": 3,
+  "play_games": 20,
+  "max_steps": 30000
+ },
+ "iterations": [
+  {
+   "iteration": 0,
+   "dataset_states": 109903,
+   "train_seconds": 277.6,
+   "expert_state_test_accuracy": 0.9411870245442802,
+   "play": {
+    "games": 20,
+    "wins": 0,
+    "deaths": 0,
+    "loops": 20,
+    "timeouts": 0,
+    "mean_apples": 2.2,
+    "max_apples": 8,
+    "mean_steps_when_won": null
+   },
+   "next_beta": 0.5,
+   "new_states": 18256,
+   "on_policy_agreement": 0.855517096706524,
+   "rollout_seconds": 9.1
+  },
+  {
+   "iteration": 1,
+   "dataset_states": 128159,
+   "train_seconds": 109.5,
+   "expert_state_test_accuracy": 0.9450265537534089,
+   "play": {
+    "games": 20,
+    "wins": 0,
+    "deaths": 0,
+    "loops": 20,
+    "timeouts": 0,
+    "mean_apples": 2.4,
+    "max_apples": 6,
+    "mean_steps_when_won": null
+   },
+   "next_beta": 0.25,
+   "new_states": 16159,
+   "on_policy_agreement": 0.8621943353075705,
+   "rollout_seconds": 8.0
+  },
+  {
+   "iteration": 2,
+   "dataset_states": 144318,
+   "train_seconds": 130.2,
+   "expert_state_test_accuracy": 0.9423352949619636,
+   "play": {
+    "games": 20,
+    "wins": 0,
+    "deaths": 1,
+    "loops": 19,
+    "timeouts": 0,
+    "mean_apples": 4.95,
+    "max_apples": 18,
+    "mean_steps_when_won": null
+   },
+   "next_beta": 0.125,
+   "new_states": 21634,
+   "on_policy_agreement": 0.9005767524401065,
+   "rollout_seconds": 9.8
+  },
+  {
+   "iteration": 3,
+   "dataset_states": 165952,
+   "train_seconds": 140.0,
+   "expert_state_test_accuracy": 0.9499067030285633,
+   "play": {
+    "games": 20,
+    "wins": 0,
+    "deaths": 4,
+    "loops": 16,
+    "timeouts": 0,
+    "mean_apples": 9.1,
+    "max_apples": 35,
+    "mean_steps_when_won": null
+   },
+   "next_beta": 0.0625,
+   "new_states": 16301,
+   "on_policy_agreement": 0.9315631792281032,
+   "rollout_seconds": 8.4
+  },
+  {
+   "iteration": 4,
+   "dataset_states": 182253,
+   "train_seconds": 157.9,
+   "expert_state_test_accuracy": 0.9537103487871393,
+   "play": {
+    "games": 20,
+    "wins": 0,
+    "deaths": 9,
+    "loops": 11,
+    "timeouts": 0,
+    "mean_apples": 16.35,
+    "max_apples": 37,
+    "mean_steps_when_won": null
+   },
+   "next_beta": 0.03125,
+   "new_states": 16145,
+   "on_policy_agreement": 0.9458139955397504,
+   "rollout_seconds": 7.0
+  },
+  {
+   "iteration": 5,
+   "dataset_states": 198398,
+   "train_seconds": 154.8,
+   "expert_state_test_accuracy": 0.9543921343476389,
+   "play": {
+    "games": 20,
+    "wins": 0,
+    "deaths": 7,
+    "loops": 13,
+    "timeouts": 0,
+    "mean_apples": 22.15,
+    "max_apples": 41,
+    "mean_steps_when_won": null
+   },
+   "next_beta": 0.015625,
+   "new_states": 14514,
+   "on_policy_agreement": 0.9636339056374206,
+   "rollout_seconds": 6.1
+  },
+  {
+   "iteration": 6,
+   "dataset_states": 212912,
+   "train_seconds": 90.9,
+   "expert_state_test_accuracy": 0.9572986938423999,
+   "play": {
+    "games": 20,
+    "wins": 0,
+    "deaths": 13,
+    "loops": 7,
+    "timeouts": 0,
+    "mean_apples": 25.4,
+    "max_apples": 45,
+    "mean_steps_when_won": null
+   },
+   "next_beta": 0.0078125,
+   "new_states": 19795,
+   "on_policy_agreement": 0.9636898920510304,
+   "rollout_seconds": 8.8
+  },
+  {
+   "iteration": 7,
+   "dataset_states": 232707,
+   "train_seconds": 36.8,
+   "expert_state_test_accuracy": 0.9597387684799771,
+   "play": {
+    "games": 20,
+    "wins": 0,
+    "deaths": 15,
+    "loops": 5,
+    "timeouts": 0,
+    "mean_apples": 26.3,
+    "max_apples": 44,
+    "mean_steps_when_won": null
+   },
+   "next_beta": 0.00390625,
+   "new_states": 17307,
+   "on_policy_agreement": 0.9681678321678322,
+   "rollout_seconds": 7.3
+  },
+  {
+   "iteration": 8,
+   "dataset_states": 250014,
+   "train_seconds": 15.9,
+   "expert_state_test_accuracy": 0.9638653652935266,
+   "play": {
+    "games": 20,
+    "wins": 0,
+    "deaths": 16,
+    "loops": 4,
+    "timeouts": 0,
+    "mean_apples": 29.9,
+    "max_apples": 45,
+    "mean_steps_when_won": null
+   },
+   "next_beta": 0.001953125,
+   "new_states": 16323,
+   "on_policy_agreement": 0.9627707177376051,
+   "rollout_seconds": 8.3
+  },
+  {
+   "iteration": 9,
+   "dataset_states": 266337,
+   "train_seconds": 16.1,
+   "expert_state_test_accuracy": 0.9648701019089996,
+   "play": {
+    "games": 20,
+    "wins": 0,
+    "deaths": 13,
+    "loops": 7,
+    "timeouts": 0,
+    "mean_apples": 30.15,
+    "max_apples": 50,
+    "mean_steps_when_won": null
+   },
+   "next_beta": 0.0009765625,
+   "new_states": 13982,
+   "on_policy_agreement": 0.9699221762602538,
+   "rollout_seconds": 7.0
+  },
+  {
+   "iteration": 10,
+   "dataset_states": 280319,
+   "train_seconds": 16.9,
+   "expert_state_test_accuracy": 0.9657671881728147,
+   "play": {
+    "games": 20,
+    "wins": 0,
+    "deaths": 14,
+    "loops": 6,
+    "timeouts": 0,
+    "mean_apples": 29.1,
+    "max_apples": 49,
+    "mean_steps_when_won": null
+   }
+  }
+ ]
+}
