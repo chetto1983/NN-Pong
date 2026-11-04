@@ -79,14 +79,17 @@ la corallo da una strategia deterministica di confronto, volutamente imprecisa.
 Fuori dal dominio (`y` non ridotta o racchetta fuori campo) `forward` solleva
 `ValueError` invece di restituire un comando sbagliato. La rete precedente,
 2 → 8 → 2 → 1 con 45 parametri, produceva gli stessi comandi, ma 5 delle 8 unità
-nascoste non si attivavano mai: lo stress test sotto dà risultati identici.
+nascoste non si attivavano mai: gli stress test davano risultati identici.
 
 ### Fisica
 
 Velocità costante fra gli urti; collisioni calcolate al tempo esatto di contatto
 fra il cerchio della palla e le racchette a capsula, anche a velocità che
 supererebbero lo spessore della racchetta. Sulle racchette contano anche il loro
-movimento e l'attrito tangenziale con spin. Passi fisici di 1/120 s con
+movimento e l'attrito tangenziale con spin. Dopo un colpo la direzione resta
+entro 60° dall'orizzontale, come nel Pong classico: senza questo limite un urto
+sulla calotta arrotondata poteva lasciare la palla quasi verticale e bloccare lo
+scambio per minuti. Passi fisici di 1/120 s con
 interpolazione grafica. Dettagli e limiti in [docs/PONG_PHYSICS.md](docs/PONG_PHYSICS.md).
 
 | Tasto | Azione |
@@ -102,15 +105,24 @@ interpolazione grafica. Dettagli e limiti in [docs/PONG_PHYSICS.md](docs/PONG_PH
 
 ```bash
 python pong.py --test                                # rete contro la formula di riferimento, 50.000 campioni
-python pong.py --headless --seeds 100 --frames 10000 # 1.000.000 di passi da 1/60 s, senza finestra
+python pong.py --headless --seeds 100 --frames 10000 --speed 3             # benchmark
+python pong.py --headless --seeds 100 --frames 10000 --speed 3 --tracking  # controllo senza previsione
 ```
 
-Risultato dello stress test: 3.019 respinte, **zero palle mancate** dalla rete,
-punteggio aggregato 38–0. Attenzione: a questa velocità non manca nessuna palla
-nemmeno una racchetta che segue la palla senza previsione, quindi il test non
-distingue la rete da un controllore banale; la differenza appare da 2× la
-velocità di servizio ([E1](docs/EXPERIMENTS.md#e1--rimbalzi-dentro-o-fuori-dalla-rete-pong)).
-`--seeds` e `--frames` richiedono interi positivi.
+Ogni comando simula 1.000.000 di passi da 1/60 s senza finestra. `--speed`
+moltiplica la velocità di servizio; `--tracking` è un controllo in cui la rete
+riceve la quota attuale della palla invece della previsione.
+
+| Servizio | Rete con previsione: mancate / respinte | Inseguimento senza previsione |
+| --- | ---: | ---: |
+| 1× (360 px/s) | 0 / 2.962 | 0 / 3.023 |
+| 3× (1.080 px/s) | **0 / 8.961** | **58 / 9.531** |
+
+A velocità normale nessuno dei due manca una palla, quindi quel test non
+distingue la rete da un controllore banale: il benchmark di riferimento è a 3×
+([E1](docs/EXPERIMENTS.md#e1--rimbalzi-dentro-o-fuori-dalla-rete-pong)). I numeri
+misurano la difesa contro l'avversario incluso, non contro ogni avversario.
+`--seeds` e `--frames` richiedono interi positivi, `--speed` un numero positivo.
 
 ## Snake
 

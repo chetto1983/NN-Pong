@@ -55,6 +55,14 @@ trasferire energia alla palla; l'attrito può dissiparne una parte. Lo spin
 influenza i contatti successivi, senza introdurre una forza curva durante il
 volo. I tasti +/- sono un intervento esplicito dell'utente sulla velocità.
 
+Dopo l'impulso, la direzione in uscita da una racchetta viene limitata a 60°
+dall'orizzontale (`MAX_BOUNCE_ANGLE_DEG`): se la componente orizzontale è
+minore di metà della velocità, la velocità viene ruotata fino a quel limite,
+conservando modulo e spin. È un vincolo di gioco, come nel Pong classico, non
+una legge fisica. Senza di esso un urto sulla calotta poteva produrre una palla
+quasi verticale: nel seed 28 avanzava di 6,5 px/s e impiegava circa 150 secondi
+simulati ad attraversare il campo.
+
 Per evitare che due racchette passive finiscano in scambi orizzontali, l'avversario
 esegue una battuta: al punto previsto raggiungibile aggiunge un'oscillazione
 verticale di ampiezza 30 px e frequenza 0,6 Hz. Il suo motore resta limitato a
