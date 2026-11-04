@@ -1,12 +1,11 @@
 """Deterministic Snake rules, independent of the Pygame display."""
 
-from numbers import Integral
 import random
+from numbers import Integral
 
 import numpy as np
 
 from .network import RIGHT, _dimensions, create_network
-
 
 DIRECTIONS = ((0, -1), (1, 0), (0, 1), (-1, 0))
 
