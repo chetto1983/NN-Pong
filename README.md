@@ -1,248 +1,194 @@
 # NN Pong e Snake
 
-Due giochi automatici controllati da reti con **pesi costruiti analiticamente**,
-senza addestramento: Pong e Snake Classic. Snake riprende la grafica del gioco
-su [snake-game.io](https://snake-game.io/) e usa una rete che osserva mela e corpo
-per scegliere scorciatoie; la baseline originale da 150 parametri resta disponibile.
+[![Tests](https://github.com/chetto1983/NN-Pong/actions/workflows/tests.yml/badge.svg)](https://github.com/chetto1983/NN-Pong/actions/workflows/tests.yml)
 
-Pong automatico in Python e Pygame: la racchetta turchese è controllata da una
-piccola rete ReLU con pesi costruiti analiticamente, senza addestramento.
-La racchetta corallo usa una strategia deterministica di confronto.
+Due giochi automatici in Python e Pygame, controllati da reti ReLU con **pesi
+costruiti analiticamente**: nessun training, nessun reinforcement learning.
+I pesi sono scritti a mano a partire dall'algoritmo che devono eseguire.
 
 L'idea nasce da [Sparks of Weight-Space Programming](https://rikiyat.github.io/blog/weight-space-programming/)
 di Rikiya Takehi, Jayden Teoh, Alex Zhang e Omar Khattab. Questo progetto è una
 dimostrazione indipendente ispirata al principio di esprimere un algoritmo nei
 pesi di una rete; non riproduce i benchmark dell'articolo.
 
-## Quanti parametri hanno le reti
+| Pong | Snake |
+| --- | --- |
+| ![Pong](docs/images/pong.png) | ![Snake](docs/images/snake.png) |
 
-Il conteggio comprende pesi e bias. La rete completa di Snake usa matrici
-sparse: i coefficienti memorizzati vanno distinti dalle dimensioni delle
-matrici dense equivalenti.
+## Avvio rapido
 
-| Rete | Architettura | Pesi memorizzati | Bias | Totale memorizzato | Equivalente denso |
-| --- | --- | ---: | ---: | ---: | ---: |
-| Pong | 2 → 8 → 2 → 1 | 34 | 11 | **45** | 45 |
-| Snake originale, ciclo | 2 → 18 → 4 → 4 | 124 | 26 | **150** | 150 |
-| Snake completa, scorciatoie | 1008 → 955 → 28 → 11 → 20 → 4 | 6.148 | 1.018 | **7.166** | 991.006 |
-
-I **7.166** coefficienti della rete completa includono tutti i bias e gli zeri
-esplicitamente memorizzati. **991.006** è il conteggio che si avrebbe allocando
-tutte le connessioni, comprese quelle implicitamente nulle; non è il numero
-di coefficienti salvati nel modello sparse. Gli indici delle connessioni e
-gli altri metadati occupano memoria aggiuntiva, ma non sono inclusi nel
-conteggio di pesi e bias.
-
-Tutti i pesi delle reti di gioco sono fissi e costruiti analiticamente, senza
-training o RL. La variante equivalente di Snake da **129 parametri** è stata
-provata soltanto in memoria: non è una delle reti distribuite né la baseline
-usata nei benchmark.
-
-I pesi Snake sono leggibili in [snake_classic.json](weights/snake_classic.json)
-e [snake_shortcuts.json](weights/snake_shortcuts.json). La costruzione dei pesi
-Pong è in [pong_game/network.py](pong_game/network.py).
-
-## Requisiti e avvio
-
-Python **3.12 o superiore**. Versioni delle dipendenze bloccate in
-`requirements.txt`; ambiente locale verificato con Python 3.13 su Windows.
-
-Da PowerShell, nella cartella del progetto:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe pong.py
-
-# Oppure Snake
-.\.venv\Scripts\python.exe snake.py
-```
-
-Non serve attivare l'ambiente virtuale. Se `.venv` è già stato preparato, basta
-l'ultimo comando. Su Linux/macOS:
+Serve Python **3.12 o superiore**.
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python pong.py
+python -m venv .venv
+# Linux/macOS
+.venv/bin/python -m pip install -e .
+.venv/bin/nn-pong
+.venv/bin/nn-snake
 ```
 
-Entrambe le racchette sono automatiche. Il campo e il punteggio sono sempre
-visibili; uscita della rete, previsione e statistiche si consultano nel pannello
-di diagnostica, separato dall'area di gioco. La finestra è ridimensionabile.
+```powershell
+# Windows (PowerShell)
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\nn-pong.exe
+.\.venv\Scripts\nn-snake.exe
+```
+
+Non serve attivare l'ambiente virtuale. In alternativa all'installazione come
+pacchetto: `pip install -r requirements.txt` (versioni bloccate, usate dalla CI)
+e poi `python pong.py` / `python snake.py`.
+
+## Quanti parametri hanno le reti
+
+Il conteggio comprende pesi e bias.
+
+| Rete | Architettura | Pesi | Bias | Totale memorizzato | Equivalente denso |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Pong | 2 → 2 → 2 → 1 | 10 | 5 | **15** | 15 |
+| Snake, ciclo (baseline) | 2 → 18 → 4 → 4 | 124 | 26 | **150** | 150 |
+| Snake, scorciatoie (predefinita) | 1008 → 955 → 28 → 11 → 20 → 4 | 6.148 | 1.018 | **7.166** | 991.006 |
+
+La rete Snake con scorciatoie usa matrici sparse: 7.166 sono i coefficienti
+memorizzati, zeri espliciti compresi; 991.006 è il conteggio con tutte le
+connessioni allocate. Gli indici delle connessioni non sono inclusi.
+
+I pesi Snake sono leggibili in [snake_classic.json](weights/snake_classic.json)
+e [snake_shortcuts.json](weights/snake_shortcuts.json); quelli di Pong sono
+costruiti in [pong_game/network.py](pong_game/network.py).
+
+## Pong
+
+Entrambe le racchette sono automatiche. La turchese è guidata dalla rete;
+la corallo da una strategia deterministica di confronto, volutamente imprecisa.
+
+### Cosa fa Python e cosa fa la rete
+
+1. **Python** calcola il tempo all'impatto e l'intercetto grezzo
+   `y = ball_y + ball_vy * t`, poi lo riduce modulo il periodo di riflessione
+   `2*SPAN` (`wrap_period`). È questa riduzione a gestire un numero qualsiasi
+   di rimbalzi sulle pareti.
+2. **La rete** riceve la quota della racchetta e la coordinata ridotta:
+   - un'unità nascosta, sempre attiva sul dominio, trasporta `y − paddle_y`;
+   - un'unità *hinge* realizza l'unico ripiegamento del periodo (*fold*);
+   - il secondo strato confronta il fold con la racchetta e applica una zona
+     morta di 4 pixel;
+   - l'uscita è il comando di movimento: positivo verso il basso.
+3. **La simulazione** moltiplica l'uscita per un guadagno e ne limita la velocità.
+
+Fuori dal dominio (`y` non ridotta o racchetta fuori campo) `forward` solleva
+`ValueError` invece di restituire un comando sbagliato. La rete precedente,
+2 → 8 → 2 → 1 con 45 parametri, produceva gli stessi comandi, ma 5 delle 8 unità
+nascoste non si attivavano mai: lo stress test sotto dà risultati identici.
+
+### Fisica
+
+Velocità costante fra gli urti; collisioni calcolate al tempo esatto di contatto
+fra il cerchio della palla e le racchette a capsula, anche a velocità che
+supererebbero lo spessore della racchetta. Sulle racchette contano anche il loro
+movimento e l'attrito tangenziale con spin. Passi fisici di 1/120 s con
+interpolazione grafica. Dettagli e limiti in [docs/PONG_PHYSICS.md](docs/PONG_PHYSICS.md).
 
 | Tasto | Azione |
 | --- | --- |
 | `Esc` | Esci |
 | `Spazio` | Pausa / riprendi |
 | `R` | Ricomincia la partita |
-| `G` | Mostra / nascondi la diagnostica fuori dal campo |
-| `+` oppure `=` | Aumenta la velocità della palla |
-| `-` | Riduci la velocità della palla |
+| `G` | Mostra / nascondi la diagnostica |
+| `+` / `=` e `-` | Velocità della palla |
 | `F` | Schermo intero / finestra |
 
-## Verifiche
-
-Con l'ambiente attivato, oppure sostituendo `python` con il percorso indicato sopra:
+### Verifica
 
 ```bash
-# Test di regressione, CLI e rendering Pygame senza finestra
-python -m unittest discover -s tests -v
-
-# Controllo numerico della rete su 50.000 campioni
-python pong.py --test
-
-# Simulazione riproducibile: un milione di frame, senza finestra
-python pong.py --headless --seeds 100 --frames 10000
+python pong.py --test                                # rete contro la formula di riferimento, 50.000 campioni
+python pong.py --headless --seeds 100 --frames 10000 # 1.000.000 di passi da 1/60 s, senza finestra
 ```
 
-`--frames` e `--seeds` richiedono interi positivi. I seed della simulazione
-headless vanno da zero a `--seeds - 1`; `--frames` indica passi di 1/60 di
-secondo per seed, indipendentemente dalla velocità del computer.
-Il risultato riporta respinte, palle mancate e punteggio aggregato: zero palle
-mancate misura la capacità di difendere nelle condizioni provate, non quella di
-battere ogni avversario. Il comando termina anche se vengono registrati errori
-di gioco: lo stress test restituisce statistiche, senza imporre un punteggio minimo.
+Risultato dello stress test: 3.019 respinte, **zero palle mancate** dalla rete,
+punteggio aggregato 38–0. Misura la difesa contro l'avversario incluso, non contro
+ogni avversario possibile. `--seeds` e `--frames` richiedono interi positivi.
 
-Il workflow `.github/workflows/tests.yml` esegue i test su Windows e Linux quando
-la repository viene ospitata su GitHub. Il rendering nei test usa il driver SDL
-`dummy`, quindi non richiede uno schermo.
+## Snake
 
-## Come funziona
+Campo 18×14. Il serpente parte da solo; le frecce possono solo riprendere una
+pausa, la direzione è sempre decisa dalla rete.
 
-La rete `PongNetV5` ha struttura **2 → 8 → 2 → 1**, con 45 parametri tra pesi e
-bias. Riceve la quota della racchetta e una previsione verticale grezza:
+- **Rete con scorciatoie (predefinita).** Riceve quattro mappe binarie (testa,
+  mela, coda, corpo). Nei pesi sono codificati ostacoli, distanze sul ciclo e
+  scelta delle scorciatoie; da metà campo occupato torna al ciclo per
+  ricompattare il corpo. In partita esegue solo strati affini, ReLU e argmax,
+  senza ricerca di percorsi né correzione esterna dell'azione.
+  Costruzione in [docs/SNAKE.md](docs/SNAKE.md).
+- **Baseline a ciclo** (`--policy cycle`). Vede solo la testa e percorre un
+  ciclo hamiltoniano fisso. Descritta in [docs/SNAKE_BASELINE.md](docs/SNAKE_BASELINE.md).
 
-1. Python calcola il tempo all'impatto e `y_pred = ball_y + ball_vy * t`, poi
-   riduce la coordinata modulo il periodo di riflessione per tenerla nel
-   dominio della rete senza cambiare il punto di arrivo.
-2. Le attivazioni ReLU del primo strato rappresentano i segmenti necessari a
-   ripiegare la traiettoria dopo i rimbalzi, tramite una funzione triangolare
-   chiamata *fold*.
-3. Il secondo strato combina il fold, la posizione della racchetta e una zona
-   morta di quattro pixel.
-4. Lo strato finale produce il movimento: positivo verso il basso, negativo
-   verso l'alto. La simulazione ne limita la velocità.
+La garanzia di completamento vale per i pesi costruiti, a partire dal corpo
+iniziale sul ciclo; pesi modificati o stati arbitrari possono invalidarla.
+La partita è vinta quando il serpente occupa tutte le 252 celle.
 
-Il fold restituito per il grafico è diagnostico: il movimento viene calcolato
-attraverso le matrici `W1`, `W2`, `W3`. Il centro della palla rimbalza tra
-`y=16` e `y=634`; la rete usa gli stessi limiti e considera il raggio di 9 pixel.
-
-La cinematica precedente alla rete resta scritta in Python. Il vecchio limite
-che tagliava le previsioni molto lontane è stato rimosso; la periodicità consente
-di gestire anche traiettorie con molti rimbalzi.
-
-## Fisica di Pong
-
-La palla si muove a velocità costante fra gli urti. Le collisioni sono calcolate
-al tempo di contatto fra il cerchio della palla e le racchette a capsula, anche
-quando lo spostamento supera lo spessore della racchetta. Sulle pareti cambia
-la componente normale della velocità; sulle racchette intervengono anche il
-movimento della racchetta e l'attrito tangenziale con spin. Non c'è più un
-aumento automatico della velocità a ogni respinta.
-
-L'app usa passi fisici di 1/120 di secondo e interpolazione per il rendering.
-Pareti e racchette disegnate corrispondono alla geometria simulata. È un modello
-di urti 2D senza gravità, non una simulazione tridimensionale del ping-pong.
-Dettagli e limiti in [docs/PONG_PHYSICS.md](docs/PONG_PHYSICS.md).
-
-![Nuova schermata Pong](docs/images/pong.png)
-
-Verifica locale della revisione Pong: **92 test superati** al momento della revisione;
-stress Pong di 100 seed × 10.000 passi, 3.019 respinte, zero palle mancate
-dalla rete e punteggio aggregato 38–0. Questi risultati riguardano l'avversario
-e le condizioni inclusi nella demo.
-
-## File
-
-```text
-pong.py                     CLI e compatibilità degli import
-pong_game/                  Configurazione, rete, fisica e renderer
-requirements.txt            Dipendenze con versioni bloccate
-tests/test_pong.py           Test della rete, fisica e CLI
-tests/test_pong_physics.py   Regressioni degli urti e della temporizzazione
-tests/test_app.py            Rendering, comandi e ridimensionamento
-.github/workflows/tests.yml  Verifiche automatiche Windows/Linux
-docs/superpowers/            Decisioni e piano della migrazione
+```bash
+python snake.py                                   # finestra Pygame
+python snake.py --test                            # verifica ogni cella del ciclo e una partita completa
+python snake.py --headless --seeds 100            # 100 partite riproducibili (codice 1 se una perde)
+python snake.py --compare --seeds 100             # rete con scorciatoie contro baseline
+python snake.py --policy cycle                    # solo baseline
+python snake.py --weights weights/snake_shortcuts.json
+python snake.py --export-weights pesi.json
 ```
 
-Il precedente `pongNN.py` era un generatore che scriveva in `/mnt/data`, non
-un punto di avvio del gioco. È stato sostituito da `pong.py`; l'originale resta
-recuperabile nel primo commit della repository.
+`--seed` imposta il primo seed, `--max-steps` il limite di mosse (default
+100.000), `--json` produce statistiche leggibili da altri programmi.
 
-## Snake Classic
-
-```powershell
-# Avvia la finestra Pygame
-.\.venv\Scripts\python.exe snake.py
-
-# Verifica ogni cella del ciclo e una partita completa
-.\.venv\Scripts\python.exe snake.py --test
-
-# Cento partite riproducibili, senza finestra
-.\.venv\Scripts\python.exe snake.py --headless --seeds 100
-
-# Confronta rete completa e baseline sugli stessi seed
-.\.venv\Scripts\python.exe snake.py --compare --seeds 100
-
-# Usa i pesi della rete completa inclusi nella repository
-.\.venv\Scripts\python.exe snake.py --weights weights/snake_shortcuts.json
-
-# Rete originale, senza scorciatoie
-.\.venv\Scripts\python.exe snake.py --policy cycle
-
-# Esporta una nuova copia dei pesi analitici
-.\.venv\Scripts\python.exe snake.py --export-weights pesi.json
-```
-
-La finestra riprende **Classic, tema Sunset**: scacchiera arancione 18×14,
-serpente blu, mela rossa, font e icone del riferimento. Le altre modalità del
-sito non fanno parte di questa demo. Tutti gli asset sono locali e il gioco
-funziona offline; fonti in [snake_assets/SOURCES.md](snake_assets/SOURCES.md).
-
-| Controllo Snake | Azione |
+| Tasto | Azione |
 | --- | --- |
 | `Spazio` | Pausa / riprendi |
 | `R` | Nuova partita con lo stesso seed |
 | `+` / `-` | Velocità, da 1 a 120 mosse al secondo |
 | `G` | Mostra / nascondi il ciclo di riferimento |
 | `H` o icona `?` | Aiuto |
-| Ingranaggio | Velocità e visualizzazione del percorso |
 | `F` o icona schermo intero | Cambia visualizzazione |
-| Altoparlante | Attiva / disattiva il suono |
+| Icone ingranaggio / altoparlante | Impostazioni / suono |
 | `Esc` | Chiudi il pannello aperto oppure esci |
 
-Il serpente parte automaticamente. Le frecce possono riprendere una pausa,
-ma la direzione rimane decisa dalla rete. Il record locale è salvato in
-`~/.nn-pong/snake-record.json`; le simulazioni headless non lo modificano.
+Il record locale è salvato in `~/.nn-pong/snake-record.json`; le simulazioni
+headless non lo modificano.
 
-La nuova rete **1008 → 955 → 28 → 11 → 20 → 4** riceve quattro mappe binarie:
-testa, mela, coda e corpo. Nei pesi sono codificati ostacoli, distanze sul ciclo
-e scelta delle scorciatoie. Da metà campo occupato ritorna al ciclo per
-ricompattare il corpo. In partita esegue soltanto strati affini, ReLU e argmax,
-senza training, ricerca di percorsi o sostituzione esterna dell'azione.
+### Risultati
 
-Contiene **7.166 coefficienti memorizzati** in matrici sparse (991.006 nella
-rappresentazione densa equivalente). È più grande e costa più CPU della baseline:
-il guadagno riguarda le mosse necessarie a completare il gioco. La proprietà di
-sicurezza riguarda i pesi costruiti, il campo vuoto e il corpo inizializzato
-sul ciclo; modificare pesi, corpo o ostacoli può invalidarla.
+| Seed | Baseline: mosse medie | Scorciatoie: mosse medie | Riduzione | Completamenti |
+| --- | ---: | ---: | ---: | ---: |
+| 0–99 | 15.465,24 | 8.369,72 | −45,88% | 100/100 per entrambe |
+| 100–199 | 15.427,51 | 8.380,99 | −45,68% | 100/100 per entrambe |
 
-La demo dichiara vittoria quando occupa tutte le 252 celle (248 mele dopo i
-quattro segmenti iniziali). Questo stato terminale esplicito consente di misurare
-il completamento del controllore. `--headless` restituisce codice 1 se una partita
-muore o supera `--max-steps` (default 100.000); `--json` produce statistiche
-leggibili da altri programmi. `--seed` imposta il primo seed della serie.
+Zero collisioni e 248 mele per partita in tutti i casi. Report JSON e
+protocollo in [docs/benchmarks](docs/benchmarks/README.md). La rete con
+scorciatoie è più grande e costa più CPU: il guadagno è nel numero di mosse.
 
-La costruzione matematica dei pesi è descritta in [docs/SNAKE.md](docs/SNAKE.md).
-I test Snake sono inclusi nel comando `python -m unittest discover -s tests -v`.
+## Sviluppo
 
-Confronto sui seed **0–99**: **100 completamenti su 100** per entrambe le reti,
-zero collisioni e 248 mele per partita. Media: **15.465,24 → 8.369,72 mosse**,
-una riduzione del **45,88%**. Report JSON in [docs/benchmarks](docs/benchmarks/).
+```bash
+python -m pip install -e ".[dev]"
+python -m unittest discover -s tests -v   # include rendering con driver SDL "dummy"
+ruff check .
+```
 
-Sui seed separati **100–199**, il risultato è **15.427,51 → 8.380,99 mosse**
-(**−45,68%**), con altri 100 completamenti su 100 e zero collisioni.
-La suite completa passa **115 test**. [Protocollo e limiti del confronto](docs/benchmarks/README.md).
+La CI ([tests.yml](.github/workflows/tests.yml)) esegue lint, test e comandi
+di verifica su Linux, Windows e macOS con Python 3.12 e 3.13.
 
-![Snake Classic in Pygame](docs/images/snake.png)
+```text
+pong.py, snake.py        CLI (entry point nn-pong, nn-snake)
+pong_game/               configurazione, rete, fisica, renderer di Pong
+snake_game/              regole, reti, sprite disegnati in codice, renderer di Snake
+snake_game/assets/       font Nunito (OFL)
+weights/                 pesi Snake esportati
+tests/                   test unitari, di regressione e di rendering
+docs/                    costruzione delle reti, fisica, benchmark
+```
+
+## Licenza
+
+Codice, pesi, immagini e documentazione: [BSD Zero Clause (0BSD)](LICENSE),
+uso libero senza obbligo di attribuzione. Unica eccezione: il font Nunito in
+`snake_game/assets/`, distribuito con la propria [SIL Open Font License](snake_game/assets/OFL-Nunito.txt).
+Dettagli in [snake_game/assets/SOURCES.md](snake_game/assets/SOURCES.md).
