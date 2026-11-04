@@ -7,7 +7,18 @@ import sys
 import unittest
 from pathlib import Path
 
-from pong_game import BALL_SPEED, PADDLE_SPEED, PongSimulation, Stats
+from pong_game import (
+    BALL_R,
+    BALL_SPEED,
+    MAX_BOUNCE_ANGLE_DEG,
+    PADDLE_MARGIN,
+    PADDLE_RADIUS,
+    PADDLE_SEGMENT_HALF,
+    PADDLE_SPEED,
+    WIDTH,
+    PongSimulation,
+    Stats,
+)
 
 
 class ContinuousPhysicsTests(unittest.TestCase):
@@ -302,6 +313,29 @@ print(json.dumps(results))
                 self.assertAlmostEqual(state['other_y'], 325 + 100 * (1 / 60 + 0.25))
                 self.assertLessEqual(state['hits'], 1)
                 self.assertEqual(state['final_hits'], state['hits'])
+
+    def test_cap_hit_cannot_leave_ball_almost_vertical(self):
+        limit = math.cos(math.radians(MAX_BOUNCE_ANGLE_DEG))
+        for name, center_x, away in (('player', PADDLE_MARGIN + PADDLE_RADIUS, 1),
+                                     ('opponent', WIDTH - PADDLE_MARGIN - PADDLE_RADIUS, -1)):
+            with self.subTest(paddle=name):
+                top = 325 - PADDLE_SEGMENT_HALF - PADDLE_RADIUS - BALL_R - 2
+                game = self.game(x=center_x - 3 * away, y=top, vx=-10 * away, vy=300)
+                game.player_y = game.opponent_y = 325
+                speed = math.hypot(game.ball_vx, game.ball_vy)
+                game.step(control=False)
+                new_speed = math.hypot(game.ball_vx, game.ball_vy)
+                self.assertGreaterEqual(game.ball_vx * away, new_speed * limit - 1e-9)
+                self.assertAlmostEqual(new_speed, speed, delta=speed * 0.2)
+
+    def test_no_rally_goes_nearly_vertical(self):
+        limit = math.cos(math.radians(MAX_BOUNCE_ANGLE_DEG))
+        game = PongSimulation(seed=28)  # Seed that stalled at |vx| = 6.5 px/s before the fix.
+        for _ in range(10000):
+            game.step()
+            if game.serve_remaining <= 0:
+                speed = math.hypot(game.ball_vx, game.ball_vy)
+                self.assertGreaterEqual(abs(game.ball_vx), speed * limit - 1e-9)
 
 
 if __name__ == '__main__':

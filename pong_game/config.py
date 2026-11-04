@@ -23,6 +23,9 @@ BALL_SPEED = 360.0
 MIN_BALL_SPEED = 180.0
 MAX_BALL_SPEED = 900.0
 PADDLE_FRICTION = 0.15
+# Largest angle from the horizontal after a paddle hit. Without it a hit on a
+# rounded cap can leave the ball almost vertical and stall the rally.
+MAX_BOUNCE_ANGLE_DEG = 60.0
 CONTROL_GAIN = 60.0
 SERVE_DELAY = 0.65
 DEADZONE = 4.0

@@ -224,7 +224,7 @@ def main(argv=None):
         payload['pong'] = run_pong(args)
     if args.only != 'pong':
         payload['snake'] = run_snake(args)
-    save('e3_noise' + (f'_{args.only}' if args.only else ''), payload)
+    save('e3_noise', payload, merge=bool(args.only))
 
 
 if __name__ == '__main__':

@@ -14,6 +14,7 @@ from .config import (
     CONTROL_GAIN,
     HEIGHT,
     MAX_BALL_SPEED,
+    MAX_BOUNCE_ANGLE_DEG,
     MIN_BALL_SPEED,
     PADDLE_FRICTION,
     PADDLE_MARGIN,
@@ -45,7 +46,14 @@ class Stats:
 
 
 class PongSimulation:
-    def __init__(self, seed=0, opponent_skill=0.82, trace=False):
+    def __init__(self, seed=0, opponent_skill=0.82, trace=False,
+                 serve_speed=BALL_SPEED, tracking=False):
+        """``serve_speed`` sets the benchmark difficulty; ``tracking=True`` is a
+        control that feeds the network the current ball_y instead of a prediction."""
+        if not math.isfinite(serve_speed) or serve_speed <= 0:
+            raise ValueError("serve_speed must be finite and positive")
+        self.serve_speed = float(serve_speed)
+        self.tracking = tracking
         self.rng = random.Random(seed)
         self.net = PongNet()
         self.opponent_skill = opponent_skill
@@ -66,8 +74,8 @@ class PongSimulation:
         """Place a fresh ball at center, at a constant total speed."""
         angle = math.radians(self.rng.uniform(-25.0, 25.0))
         self.ball_x, self.ball_y = WIDTH / 2.0, HEIGHT / 2.0
-        self.ball_vx = (-1 if direction < 0 else 1) * BALL_SPEED * math.cos(angle)
-        self.ball_vy = BALL_SPEED * math.sin(angle)
+        self.ball_vx = (-1 if direction < 0 else 1) * self.serve_speed * math.cos(angle)
+        self.ball_vy = self.serve_speed * math.sin(angle)
         self.ball_spin = 0.0
         self.serve_remaining = 0.0
 
@@ -93,6 +101,8 @@ class PongSimulation:
         impact_x = PADDLE_MARGIN + PADDLE_W + BALL_R
         if self.ball_vx >= 0 or self.ball_x < impact_x:
             self.raw_prediction = HEIGHT / 2.0
+        elif self.tracking:
+            self.raw_prediction = self.ball_y
         else:
             flight = (impact_x - self.ball_x) / self.ball_vx
             self.raw_prediction = self.ball_y + self.ball_vy * flight
@@ -186,6 +196,21 @@ class PongSimulation:
         self.ball_vy += normal_impulse * ny + tangent_impulse * ty
         self.ball_spin -= 2.0 * tangent_impulse / BALL_R
         return True
+
+    def _limit_bounce_angle(self, away):
+        """Keep the outgoing direction within MAX_BOUNCE_ANGLE_DEG of horizontal.
+
+        A gameplay constraint, as in classic Pong, not a physical law: speed and
+        spin are kept, only the direction rotates. ``away`` is the horizontal
+        sign that leaves the paddle (+1 for the left paddle).
+        """
+        speed = math.hypot(self.ball_vx, self.ball_vy)
+        min_vx = speed * math.cos(math.radians(MAX_BOUNCE_ANGLE_DEG))
+        if self.ball_vx * away >= min_vx:
+            return
+        vy_sign = 1.0 if self.ball_vy >= 0 else -1.0
+        self.ball_vx = away * min_vx
+        self.ball_vy = vy_sign * math.sqrt(max(0.0, speed * speed - min_vx * min_vx))
 
     def _resolve_wall_pinch(self, name, nx, ny):
         """Yield a closing actuator when its cap traps a disk at a wall.
@@ -286,8 +311,10 @@ class PongSimulation:
                     name, nx, ny = data
                     if self._resolve_wall_pinch(name, nx, ny):
                         continue
-                    if self._impulse(nx, ny, getattr(self, name + '_vy')) and name == 'player':
-                        self.stats.hits += 1
+                    if self._impulse(nx, ny, getattr(self, name + '_vy')):
+                        self._limit_bounce_angle(1.0 if name == 'player' else -1.0)
+                        if name == 'player':
+                            self.stats.hits += 1
                 elif kind == 'stop':
                     name, y = data
                     setattr(self, name + '_y', y)
