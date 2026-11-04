@@ -8,190 +8,154 @@
   {
    "speed_factor": 1.0,
    "controller": "tracking_ball_y_no_prediction",
-   "hits": 448,
+   "hits": 460,
    "misses": 0,
    "miss_rate": 0.0
   },
   {
    "speed_factor": 1.0,
    "controller": "raw_intercept_15_params",
-   "hits": 478,
+   "hits": 455,
    "misses": 0,
    "miss_rate": 0.0
   },
   {
    "speed_factor": 1.0,
    "controller": "raw_intercept_55_params",
-   "hits": 478,
+   "hits": 455,
    "misses": 0,
    "miss_rate": 0.0
   },
   {
    "speed_factor": 1.0,
    "controller": "python_modulo_15_params_shipped",
-   "hits": 478,
+   "hits": 455,
    "misses": 0,
    "miss_rate": 0.0
   },
   {
    "speed_factor": 2.0,
    "controller": "tracking_ball_y_no_prediction",
-   "hits": 963,
-   "misses": 4,
-   "miss_rate": 0.004136504653567736
+   "hits": 947,
+   "misses": 5,
+   "miss_rate": 0.005252100840336135
   },
   {
    "speed_factor": 2.0,
    "controller": "raw_intercept_15_params",
-   "hits": 953,
+   "hits": 954,
    "misses": 0,
    "miss_rate": 0.0
   },
   {
    "speed_factor": 2.0,
    "controller": "raw_intercept_55_params",
-   "hits": 953,
+   "hits": 954,
    "misses": 0,
    "miss_rate": 0.0
   },
   {
    "speed_factor": 2.0,
    "controller": "python_modulo_15_params_shipped",
-   "hits": 953,
+   "hits": 954,
    "misses": 0,
    "miss_rate": 0.0
   },
   {
    "speed_factor": 3.0,
    "controller": "tracking_ball_y_no_prediction",
-   "hits": 1447,
-   "misses": 11,
-   "miss_rate": 0.0075445816186556925
+   "hits": 1446,
+   "misses": 10,
+   "miss_rate": 0.006868131868131868
   },
   {
    "speed_factor": 3.0,
    "controller": "raw_intercept_15_params",
-   "hits": 1457,
-   "misses": 1,
-   "miss_rate": 0.0006858710562414266
+   "hits": 1430,
+   "misses": 3,
+   "miss_rate": 0.00209351011863224
   },
   {
    "speed_factor": 3.0,
    "controller": "raw_intercept_55_params",
-   "hits": 1454,
+   "hits": 1422,
    "misses": 0,
    "miss_rate": 0.0
   },
   {
    "speed_factor": 3.0,
    "controller": "python_modulo_15_params_shipped",
-   "hits": 1454,
+   "hits": 1422,
    "misses": 0,
    "miss_rate": 0.0
   },
   {
    "speed_factor": 4.0,
    "controller": "tracking_ball_y_no_prediction",
-   "hits": 1826,
-   "misses": 63,
-   "miss_rate": 0.03335097935415564
+   "hits": 1790,
+   "misses": 75,
+   "miss_rate": 0.040214477211796246
   },
   {
    "speed_factor": 4.0,
    "controller": "raw_intercept_15_params",
-   "hits": 1931,
-   "misses": 7,
-   "miss_rate": 0.003611971104231166
+   "hits": 1842,
+   "misses": 8,
+   "miss_rate": 0.004324324324324324
   },
   {
    "speed_factor": 4.0,
    "controller": "raw_intercept_55_params",
-   "hits": 1830,
+   "hits": 1738,
    "misses": 0,
    "miss_rate": 0.0
   },
   {
    "speed_factor": 4.0,
    "controller": "python_modulo_15_params_shipped",
-   "hits": 1830,
+   "hits": 1738,
    "misses": 0,
    "miss_rate": 0.0
   },
   {
    "speed_factor": 5.0,
    "controller": "tracking_ball_y_no_prediction",
-   "hits": 1976,
-   "misses": 248,
-   "miss_rate": 0.11151079136690648
+   "hits": 1940,
+   "misses": 214,
+   "miss_rate": 0.09935004642525534
   },
   {
    "speed_factor": 5.0,
    "controller": "raw_intercept_15_params",
    "hits": 2294,
-   "misses": 41,
-   "miss_rate": 0.017558886509635975
+   "misses": 42,
+   "miss_rate": 0.01797945205479452
   },
   {
    "speed_factor": 5.0,
    "controller": "raw_intercept_55_params",
-   "hits": 2063,
-   "misses": 30,
-   "miss_rate": 0.01433349259436216
+   "hits": 1911,
+   "misses": 21,
+   "miss_rate": 0.010869565217391304
   },
   {
    "speed_factor": 5.0,
    "controller": "python_modulo_15_params_shipped",
-   "hits": 2055,
-   "misses": 30,
-   "miss_rate": 0.014388489208633094
+   "hits": 1911,
+   "misses": 21,
+   "miss_rate": 0.010869565217391304
   }
  ],
  "seeds": 50,
  "frames": 10000,
- "incoming_control_steps": 251634,
- "raw_intercept_min": -26765.993881182283,
- "raw_intercept_max": 28033.993881181726,
+ "incoming_control_steps": 251002,
+ "raw_intercept_min": -1537.981613293989,
+ "raw_intercept_max": 2175.6998863752956,
  "reflections_histogram": {
-  "0": 201070,
-  "1": 37351,
-  "2": 3765,
-  "3": 1838,
-  "4": 873,
-  "5": 564,
-  "6": 373,
-  "7": 183,
-  "8": 180,
-  "9": 180,
-  "10": 180,
-  "11": 180,
-  "12": 180,
-  "13": 181,
-  "14": 180,
-  "15": 180,
-  "16": 180,
-  "17": 180,
-  "18": 224,
-  "19": 238,
-  "20": 162,
-  "21": 1,
-  "28": 136,
-  "29": 180,
-  "30": 179,
-  "31": 180,
-  "32": 180,
-  "33": 179,
-  "34": 180,
-  "35": 180,
-  "36": 180,
-  "37": 179,
-  "38": 180,
-  "39": 180,
-  "40": 179,
-  "41": 180,
-  "42": 180,
-  "43": 179,
-  "44": 180,
-  "45": 180
+  "0": 205305,
+  "1": 40824,
+  "2": 4831,
+  "3": 42
  },
  "networks": [
   {
@@ -200,8 +164,8 @@
    "hidden": 2,
    "parameters": 15,
    "max_abs_error_on_domain": 1.7053025658242404e-13,
-   "coverage_of_real_intercepts": 0.8953797976426079,
-   "hits": 1485,
+   "coverage_of_real_intercepts": 0.9136261862455279,
+   "hits": 1446,
    "misses": 0
   },
   {
@@ -210,8 +174,8 @@
    "hidden": 3,
    "parameters": 20,
    "max_abs_error_on_domain": 3.410605131648481e-13,
-   "coverage_of_real_intercepts": 0.9016349142007837,
-   "hits": 1485,
+   "coverage_of_real_intercepts": 0.9268252842606832,
+   "hits": 1446,
    "misses": 0
   },
   {
@@ -220,8 +184,8 @@
    "hidden": 5,
    "parameters": 30,
    "max_abs_error_on_domain": 7.389644451905042e-13,
-   "coverage_of_real_intercepts": 0.9624534045478751,
-   "hits": 1485,
+   "coverage_of_real_intercepts": 0.9998326706560107,
+   "hits": 1446,
    "misses": 0
   },
   {
@@ -230,8 +194,8 @@
    "hidden": 6,
    "parameters": 35,
    "max_abs_error_on_domain": 1.5916157281026244e-12,
-   "coverage_of_real_intercepts": 0.9677428328445281,
-   "hits": 1485,
+   "coverage_of_real_intercepts": 0.9998804790400077,
+   "hits": 1446,
    "misses": 0
   },
   {
@@ -240,8 +204,8 @@
    "hidden": 9,
    "parameters": 50,
    "max_abs_error_on_domain": 4.831690603168681e-12,
-   "coverage_of_real_intercepts": 0.9732269884037928,
-   "hits": 1485,
+   "coverage_of_real_intercepts": 1.0,
+   "hits": 1446,
    "misses": 0
   },
   {
@@ -250,8 +214,8 @@
    "hidden": 10,
    "parameters": 55,
    "max_abs_error_on_domain": 5.8690829973784275e-12,
-   "coverage_of_real_intercepts": 0.9739860273254012,
-   "hits": 1485,
+   "coverage_of_real_intercepts": 1.0,
+   "hits": 1446,
    "misses": 0
   }
  ]

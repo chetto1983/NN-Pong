@@ -5,7 +5,9 @@ clone never finished a game: small errors lead it to states the teacher never
 visits. DAgger (Ross, Gordon & Bagnell, 2011) iterates:
 
 1. play with a mixture of teacher and learner (beta_i = 0.5**i teacher share,
-   chosen per step), cap and deduplicate the visited states;
+   chosen per step); when the learner falls into a loop the teacher drives to
+   the next apple, so rollouts also reach late-game states; cap and
+   deduplicate the visited states;
 2. label every visited state with the teacher's action;
 3. aggregate into the dataset and keep training the same learner.
 
@@ -42,14 +44,17 @@ def rollouts(teacher, learner, seeds, beta, max_steps, rng):
     agree = total = 0
     for seed in seeds:
         game = SnakeSimulation(seed=seed, net=teacher)
-        loop_guard, score = set(), 0
+        loop_guard, score, rescue = set(), 0, False
         for _ in range(max_steps):
             if game.score != score:
                 loop_guard.clear()
-                score = game.score
+                score, rescue = game.score, False
             key = (tuple(game.body), game.food)
             if key in loop_guard:
-                break
+                # The learner is cycling: the teacher drives to the next apple so
+                # the rollout keeps reaching later phases of the game.
+                rescue = True
+                loop_guard.clear()
             loop_guard.add(key)
             x = teacher.encode_state(game.body, game.food)
             label = int(np.argmax(teacher.forward_state(game.body, game.food)))
@@ -60,7 +65,7 @@ def rollouts(teacher, learner, seeds, beta, max_steps, rng):
                 seen.add(key)
                 xs.append(x)
                 ys.append(label)
-            action = label if rng.random() < beta else guess
+            action = label if rescue or rng.random() < beta else guess
             if game.step(action) != 'running':
                 break
     return pack(np.array(xs)), np.array(ys), agree / max(1, total)
